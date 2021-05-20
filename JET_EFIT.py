@@ -75,6 +75,7 @@ class DATA:
         DATA.psi = numpy.array([])
         DATA.NBI_t = numpy.array([])
         DATA.NBI_ptot = numpy.array([])
+
     # --- Load the pulse basic data # MACHINE DEPENDENT
     def set_pulse(self, widget):
         DATA.pulse = int(DATA.pulse_box.get_text())
@@ -188,3 +189,15 @@ class DATA:
     def close_pop_up(self, widget):
         self.pop_window.destroy()
 
+
+# --- Main function to run the whole thing...
+class Main:
+    def __init__(self):
+        data_thread = DATA()
+        print(data_thread)
+
+
+#    gtk_thread = gtk_class(data_thread)
+#    gtk.main()
+
+Main()
