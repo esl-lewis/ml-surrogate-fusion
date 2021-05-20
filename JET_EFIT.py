@@ -2,16 +2,16 @@ from numpy.core.arrayprint import DatetimeFormat
 
 
 try:
-    import sys
     import sys, traceback
     import numpy
+    import csv
+    import pandas as pd
     
     import py_flush as Flush
     from scipy import optimize
 
     # from math import pi, sin, cos, sqrt, exp, atan2, tanh, cosh
     import gtk
-    import numpy
     import matplotlib
     import matplotlib.pyplot as plt
     from matplotlib.widgets import Slider
@@ -32,6 +32,9 @@ mu_0 = 4 * 3.1415926535 * 1e-7
 eV2Joules = 1.602176487 * 1e-19
 scale_height = 50
 
+pulse_number = input("Pulse number:")
+
+
 # --- Modules for JETPPF system
 sys.path[:0] = ["/jet/share/lib/python"]
 from ppf import *
@@ -40,7 +43,8 @@ from ppf import *
 class DATA:
     # Initialise global variables
     def __init__(self):  # MACHINE DEPENDENT
-        DATA.pulse = 82630
+        #DATA.pulse = 82631
+        DATA.pulse = pulse_number
         DATA.t_min = 60.5
         DATA.t_max = 62.0
         DATA.i_min = 0
@@ -61,7 +65,7 @@ class DATA:
     # --- Load the pulse basic data # MACHINE DEPENDENT
     def set_pulse(self, widget):
         #DATA.pulse = int(DATA.pulse_box.get_text())
-        DATA.pulse = 82630
+        DATA.pulse = pulse_number
 
         # --- Prepare JETPPF system (yes, you need to knock before you open it...) # MACHINE DEPENDENT
         ier = ppfgo(pulse=DATA.pulse, seq=0)
@@ -72,12 +76,12 @@ class DATA:
         # --- Load EFIT data # MACHINE DEPENDENT
         dda = "EFIT"
         dtyp = "XIP"
-        ihdat, iwdat, data, x, t, ier = ppfget(
-            DATA.pulse, dda, dtyp, fix0=0, reshape=0, no_x=0, no_t=0
-        )
-        if ier != 0:
-            self.pop_up_message(self, "failed to load EFIT/XIP data")
-            return
+        try:
+            ihdat, iwdat, data, x, t, ier = ppfget(
+                DATA.pulse, dda, dtyp, fix0=0, reshape=0, no_x=0, no_t=0
+            )
+        except:
+            print("Failed to load EFIT data, pulse number may not exist")
         DATA.EFIT_t = t
         DATA.EFIT_xip = data
         return(data,t)
@@ -90,6 +94,15 @@ class Main:
         retrieved_data, retrieved_time = data_thread.set_pulse(data_thread)
         print(len(retrieved_data))
         print(len(retrieved_time))
+        print(retrieved_data[0:4])
+        print(retrieved_time[0:4])
+        data_dict = {'efit':retrieved_data,'time':retrieved_time}
+        df = pd.DataFrame(data_dict)
+        
+        filename = str(pulse_number) + '_EFIT.csv'
+        with open(filename,mode='w') as f:
+            df.to_csv(f)
+
 
 #    gtk_thread = gtk_class(data_thread)
 #    gtk.main()
