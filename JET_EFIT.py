@@ -32,8 +32,8 @@ mu_0 = 4 * 3.1415926535 * 1e-7
 eV2Joules = 1.602176487 * 1e-19
 scale_height = 50
 
-pulse_number = input("Pulse number:")
-
+#pulse_number = input("Pulse number:")
+pulse_number = 82630
 
 # --- Modules for JETPPF system
 sys.path[:0] = ["/jet/share/lib/python"]
@@ -45,6 +45,7 @@ class DATA:
     def __init__(self, EFIT_params):  # MACHINE DEPENDENT
         DATA.pulse = 82631
         # DATA.pulse = pulse_number
+        DATA.t = np.array([])
         DATA.t_min = 60.5
         DATA.t_max = 62.0
         DATA.psi_shift = 0.0
@@ -105,25 +106,29 @@ class DATA:
                 return
             # DATA.EFIT_xip = data
             setattr(DATA, param, data)
-
-        return (data, t)
+        print(DATA.AREA[0:4])
+        print(DATA.XIP[0:5])
+        return self
 
 
 # Main function to run whole thing
 class Main:
     def __init__(self):
-        params_to_retrive = ["AREA", "BTPD"]
+        params_to_retrieve = ["AREA", "BTPD"]
         # params_to_retrieve = input("EFIT params requested:")
-        data_thread = DATA(params_to_retrive)
-        retrieved_data, retrieved_time = data_thread.set_pulse()
-        print(len(retrieved_data))
-        print(len(retrieved_time))
-        print(retrieved_data[0:4])
-        print(retrieved_time[0:4])
+        data_thread = DATA(params_to_retrieve)
+        data_thread = data_thread.set_pulse()
+        all_data = {}
+        for parameter in params_to_retrieve:
+            all_data[parameter] = getattr(data_thread,parameter)
+        retrieved_time = DATA.t
+        all_data['Time'] = retrieved_time
+        print(data_thread.AREA[0:6])
         print(dir(data_thread))
+        #print(all_data)
+        
         """
-        data_dict = {"efit": retrieved_data, "time": retrieved_time}
-        df = pd.DataFrame(data_dict)
+        df = pd.DataFrame(all_data)
 
         filename = str(pulse_number) + "_EFIT.csv"
         with open(filename, mode="w") as f:
