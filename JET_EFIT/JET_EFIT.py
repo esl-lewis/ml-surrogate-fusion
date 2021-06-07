@@ -33,7 +33,7 @@ eV2Joules = 1.602176487 * 1e-19
 scale_height = 50
 
 #pulse_number = input("Pulse number:")
-pulse_number = 82630
+#pulse_number = 82630
 
 # --- Modules for JETPPF system
 sys.path[:0] = ["/jet/share/lib/python"]
@@ -43,16 +43,13 @@ from ppf import *
 class DATA:
     # Initialise global variables
     def __init__(self, EFIT_params):  # MACHINE DEPENDENT
-        DATA.pulse = 82631
+        #DATA.pulse = 82631
         # DATA.pulse = pulse_number
+        DATA.pulse = 0
         DATA.t = np.array([])
-        DATA.t_min = 60.5
-        DATA.t_max = 62.0
         DATA.psi_shift = 0.0
         DATA.params = EFIT_params
         for param in DATA.params:
-            print("I'm working")
-            print(param)
             setattr(DATA, param, np.array([]))
 
     # https://stackoverflow.com/questions/32721580/example-of-class-with-user-input
@@ -67,12 +64,12 @@ class DATA:
     """
 
     # --- Load the pulse basic data # MACHINE DEPENDENT
-    def set_pulse(self):
+    def set_pulse(self, pulse_number):
 
         # where EFIT_params is a list of all the metrics we want to retrieve
 
         # DATA.pulse = int(DATA.pulse_box.get_text())
-        DATA.pulse = 82630
+        DATA.pulse = pulse_number
 
         # --- Prepare JETPPF system (yes, you need to knock before you open it...) # MACHINE DEPENDENT
         ier = ppfgo(pulse=DATA.pulse, seq=0)
@@ -83,13 +80,11 @@ class DATA:
         # Load XIP first to sort out t and x
         dda = "EFIT"
         dtyp = "XIP"
-        try:
-            ihdat, iwdat, data, x, t, ier = ppfget(
+        ihdat, iwdat, data, x, t, ier = ppfget(
                 DATA.pulse, dda, dtyp, fix0=0, reshape=0, no_x=0, no_t=0
             )
-        except:
-            print("Failed to load EFIT data, pulse number may not exist")
-            return
+        if ier != 0:
+            raise Exception("Failed to load XIP data. May not exist for pulse.")
         DATA.t = t
         DATA.x = x
         DATA.XIP = data
@@ -102,38 +97,43 @@ class DATA:
                 DATA.pulse, dda, dtyp, fix0=0, reshape=0, no_x=0, no_t=0
             )
             if ier != 0:
-                print("Failed to load {} data. May not exist for pulse.".format(dtyp))
-                return
+                raise Exception("Failed to load {} data. May not exist for pulse.".format(dtyp))
             # DATA.EFIT_xip = data
             setattr(DATA, param, data)
-        print(DATA.AREA[0:4])
-        print(DATA.XIP[0:5])
         return self
 
 
 # Main function to run whole thing
 class Main:
     def __init__(self):
-        params_to_retrieve = ["AREA", "BTPD"]
+        #pulse_num = 86320
+        params_to_retrieve = ["FAXS","AREA", "BTPD","VOLM","BTND","BTNM","BTPD"]
+        # XIP automatically extracted
         # params_to_retrieve = input("EFIT params requested:")
+        # pulse_num = input("Pulse number:")
         data_thread = DATA(params_to_retrieve)
-        data_thread = data_thread.set_pulse()
-        all_data = {}
-        for parameter in params_to_retrieve:
-            all_data[parameter] = getattr(data_thread,parameter)
-        retrieved_time = DATA.t
-        all_data['Time'] = retrieved_time
-        print(data_thread.AREA[0:6])
-        print(dir(data_thread))
-        #print(all_data)
         
-        """
-        df = pd.DataFrame(all_data)
-
-        filename = str(pulse_number) + "_EFIT.csv"
-        with open(filename, mode="w") as f:
-            df.to_csv(f)
-        """
+        # Extract multiple pulses
+        for pulse_num in range(86320,86360):
+            try:
+                data_thread = data_thread.set_pulse(pulse_num)
+            except:
+                print('Data for',pulse_num,'not found. Probably dry run, skipping.')
+                continue
+            all_data = {}
+            for parameter in params_to_retrieve:
+                all_data[parameter] = getattr(data_thread,parameter)
+            retrieved_time = DATA.t
+            all_data['Time'] = retrieved_time
+        
+            plasma_current = DATA.XIP
+            all_data['XIP'] = plasma_current
+        
+            df = pd.DataFrame(all_data)
+            df = df.set_index('Time')
+            filename = str(pulse_num) + "_EFIT.csv"
+            with open(filename, mode="w") as f:
+                df.to_csv(f)
 
 
 #    gtk_thread = gtk_class(data_thread)
