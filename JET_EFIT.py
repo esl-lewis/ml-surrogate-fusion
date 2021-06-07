@@ -40,9 +40,9 @@ sys.path[:0] = ["/jet/share/lib/python"]
 from ppf import *
 
 # --- data functions
-class DATA(EFIT_params):
+class DATA:
     # Initialise global variables
-    def __init__(self):  # MACHINE DEPENDENT
+    def __init__(self, EFIT_params):  # MACHINE DEPENDENT
         # DATA.pulse = 82631
         DATA.pulse = pulse_number
         DATA.t_min = 60.5
@@ -119,17 +119,20 @@ class Main:
     def __init__(self):
         params_to_retrive = ["AREA", "BTPD"]
         data_thread = DATA(params_to_retrive)
+        data_thread.load_params()
         retrieved_data, retrieved_time = data_thread.set_pulse(data_thread)
         print(len(retrieved_data))
         print(len(retrieved_time))
         print(retrieved_data[0:4])
         print(retrieved_time[0:4])
+        """
         data_dict = {"efit": retrieved_data, "time": retrieved_time}
         df = pd.DataFrame(data_dict)
 
         filename = str(pulse_number) + "_EFIT.csv"
         with open(filename, mode="w") as f:
             df.to_csv(f)
+        """
 
 
 #    gtk_thread = gtk_class(data_thread)
