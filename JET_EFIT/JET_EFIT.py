@@ -32,8 +32,8 @@ mu_0 = 4 * 3.1415926535 * 1e-7
 eV2Joules = 1.602176487 * 1e-19
 scale_height = 50
 
-#pulse_number = input("Pulse number:")
-#pulse_number = 82630
+# pulse_number = input("Pulse number:")
+# pulse_number = 82630
 
 # --- Modules for JETPPF system
 sys.path[:0] = ["/jet/share/lib/python"]
@@ -43,7 +43,7 @@ from ppf import *
 class DATA:
     # Initialise global variables
     def __init__(self, EFIT_params):  # MACHINE DEPENDENT
-        #DATA.pulse = 82631
+        # DATA.pulse = 82631
         # DATA.pulse = pulse_number
         DATA.pulse = 0
         DATA.t = np.array([])
@@ -81,8 +81,8 @@ class DATA:
         dda = "EFIT"
         dtyp = "XIP"
         ihdat, iwdat, data, x, t, ier = ppfget(
-                DATA.pulse, dda, dtyp, fix0=0, reshape=0, no_x=0, no_t=0
-            )
+            DATA.pulse, dda, dtyp, fix0=0, reshape=0, no_x=0, no_t=0
+        )
         if ier != 0:
             raise Exception("Failed to load XIP data. May not exist for pulse.")
         DATA.t = t
@@ -97,7 +97,9 @@ class DATA:
                 DATA.pulse, dda, dtyp, fix0=0, reshape=0, no_x=0, no_t=0
             )
             if ier != 0:
-                raise Exception("Failed to load {} data. May not exist for pulse.".format(dtyp))
+                raise Exception(
+                    "Failed to load {} data. May not exist for pulse.".format(dtyp)
+                )
             # DATA.EFIT_xip = data
             setattr(DATA, param, data)
         return self
@@ -106,31 +108,31 @@ class DATA:
 # Main function to run whole thing
 class Main:
     def __init__(self):
-        #pulse_num = 86320
-        params_to_retrieve = ["FAXS","AREA", "BTPD","VOLM","BTND","BTNM","BTPD"]
+        # pulse_num = 86320
+        params_to_retrieve = ["FAXS", "AREA", "BTPD", "VOLM", "BTND", "BTNM", "BTPD"]
         # XIP automatically extracted
         # params_to_retrieve = input("EFIT params requested:")
         # pulse_num = input("Pulse number:")
         data_thread = DATA(params_to_retrieve)
-        
+
         # Extract multiple pulses
-        for pulse_num in range(86320,86360):
+        for pulse_num in range(86320, 86360):
             try:
                 data_thread = data_thread.set_pulse(pulse_num)
             except:
-                print('Data for',pulse_num,'not found. Probably dry run, skipping.')
+                print("Data for", pulse_num, "not found. Probably dry run, skipping.")
                 continue
             all_data = {}
             for parameter in params_to_retrieve:
-                all_data[parameter] = getattr(data_thread,parameter)
+                all_data[parameter] = getattr(data_thread, parameter)
             retrieved_time = DATA.t
-            all_data['Time'] = retrieved_time
-        
+            all_data["Time"] = retrieved_time
+
             plasma_current = DATA.XIP
-            all_data['XIP'] = plasma_current
-        
+            all_data["XIP"] = plasma_current
+
             df = pd.DataFrame(all_data)
-            df = df.set_index('Time')
+            df = df.set_index("Time")
             filename = str(pulse_num) + "_EFIT.csv"
             with open(filename, mode="w") as f:
                 df.to_csv(f)
