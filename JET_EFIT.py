@@ -3,7 +3,7 @@ from numpy.core.arrayprint import DatetimeFormat
 
 try:
     import sys, traceback
-    import numpy
+    import numpy as np
     import csv
     import pandas as pd
 
@@ -43,8 +43,8 @@ from ppf import *
 class DATA:
     # Initialise global variables
     def __init__(self, EFIT_params):  # MACHINE DEPENDENT
-        # DATA.pulse = 82631
-        DATA.pulse = pulse_number
+        DATA.pulse = 82631
+        # DATA.pulse = pulse_number
         DATA.t_min = 60.5
         DATA.t_max = 62.0
         DATA.psi_shift = 0.0
@@ -53,7 +53,6 @@ class DATA:
             print("I'm working")
             print(param)
             setattr(DATA, param, np.array([]))
-        ## TODO add DATA.values for all the extra EFIT stuff we are adding
 
     # https://stackoverflow.com/questions/32721580/example-of-class-with-user-input
     """
@@ -80,8 +79,8 @@ class DATA:
         ier = ppfgo(pulse=DATA.pulse, seq=0)
 
         # --- Load EFIT data # MACHINE DEPENDENT
+        # Load XIP first to sort out t and x
         dda = "EFIT"
-
         dtyp = "XIP"
         try:
             ihdat, iwdat, data, x, t, ier = ppfget(
@@ -89,26 +88,23 @@ class DATA:
             )
         except:
             print("Failed to load EFIT data, pulse number may not exist")
-        DATA.EFIT_t = t
+            return
+        DATA.t = t
         DATA.x = x
-        DATA.EFIT_xip = data
+        DATA.XIP = data
 
         # need to grab EFIT time once at beginning
-        """
-        for param in EFIT_params:
+
+        for param in self.params:
             dtyp = str(param)
             ihdat, iwdat, data, x, t, ier = ppfget(
                 DATA.pulse, dda, dtyp, fix0=0, reshape=0, no_x=0, no_t=0
             )
             if ier != 0:
-                self.pop_up_message(self, "failed to load EFIT/XIP data")
+                print("Failed to load {} data. May not exist for pulse.".format(dtyp))
                 return
-            DATA.EFIT_xip = data
-        """
-
-        ###
-
-        ### next one
+            # DATA.EFIT_xip = data
+            setattr(DATA, param, data)
 
         return (data, t)
 
@@ -117,10 +113,8 @@ class DATA:
 class Main:
     def __init__(self):
         params_to_retrive = ["AREA", "BTPD"]
+        # params_to_retrieve = input("EFIT params requested:")
         data_thread = DATA(params_to_retrive)
-        #data_thread.load_params()
-        print(data_thread)
-        print(type(data_thread))
         retrieved_data, retrieved_time = data_thread.set_pulse()
         print(len(retrieved_data))
         print(len(retrieved_time))
