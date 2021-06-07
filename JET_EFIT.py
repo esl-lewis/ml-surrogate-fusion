@@ -49,11 +49,10 @@ class DATA:
         DATA.t_max = 62.0
         DATA.psi_shift = 0.0
         DATA.params = EFIT_params
-
-    def load_params(self):
-        for param in EFIT_params:
+        for param in DATA.params:
             print("I'm working")
-            print(params)
+            print(param)
+            setattr(DATA, param, np.array([]))
         ## TODO add DATA.values for all the extra EFIT stuff we are adding
 
     # https://stackoverflow.com/questions/32721580/example-of-class-with-user-input
@@ -119,12 +118,15 @@ class Main:
     def __init__(self):
         params_to_retrive = ["AREA", "BTPD"]
         data_thread = DATA(params_to_retrive)
-        data_thread.load_params()
-        retrieved_data, retrieved_time = data_thread.set_pulse(data_thread)
+        #data_thread.load_params()
+        print(data_thread)
+        print(type(data_thread))
+        retrieved_data, retrieved_time = data_thread.set_pulse()
         print(len(retrieved_data))
         print(len(retrieved_time))
         print(retrieved_data[0:4])
         print(retrieved_time[0:4])
+        print(dir(data_thread))
         """
         data_dict = {"efit": retrieved_data, "time": retrieved_time}
         df = pd.DataFrame(data_dict)
