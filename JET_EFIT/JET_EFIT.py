@@ -108,8 +108,8 @@ class DATA:
 # Main function to run whole thing
 class Main:
     def __init__(self):
-        # pulse_num = 86320
-        params_to_retrieve = ["FAXS", "AREA", "BTPD", "VOLM", "BTND", "BTNM", "BTPD"]
+        #pulse_num = 86320
+        params_to_retrieve = ["FAXS","AREA", "BTPD","VOLM","BTND","BTNM","BTPD","WDIA","WP","Q95","QAXM","RXPL","RMAG"]
         # XIP automatically extracted
         # params_to_retrieve = input("EFIT params requested:")
         # pulse_num = input("Pulse number:")

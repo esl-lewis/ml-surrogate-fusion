@@ -99,7 +99,7 @@ class DATA:
                 DATA.pulse, dda, dtyp, fix0=0, reshape=0, no_x=0, no_t=0
             )
             if ier != 0:
-                raise Exception(
+                raise IOError(
                     "Failed to load {} data. May not exist for pulse.".format(dtyp)
                 )
             # DATA.EFIT_xip = data
@@ -112,7 +112,7 @@ class DATA:
             DATA.pulse, dda, dtyp, fix0=0, reshape=0, no_x=0, no_t=0
         )
         if ier != 0:
-            raise Exception(
+            raise IOError(
                 "Failed to load {} data. May not exist for pulse.".format(dtyp)
             )
 
@@ -121,9 +121,10 @@ class DATA:
         DATA.MSTAx = x
         DATA.EFUS = data
         print(DATA.EFUS)
+        print('test data',data)
         # is this a true/false value?
 
-        if DATA.MSTAEFUS == True:
+        if DATA.EFUS == True:
             for param in ["BVAC", "FLX", "IPLA"]:
                 dda = "MAGC"
                 dtyp = param
@@ -131,7 +132,7 @@ class DATA:
                     DATA.pulse, dda, dtyp, fix0=0, reshape=0, no_x=0, no_t=0
                 )
                 if ier != 0:
-                    raise Exception(
+                    raise IOError(
                         "Failed to load {} data. May not exist for pulse.".format(dtyp)
                     )
                 setattr(DATA, param, data)
@@ -158,11 +159,12 @@ class Main:
         data_thread = DATA(params_to_retrieve)
 
         # Extract multiple pulses
-        for pulse_num in range(86320, 86323):
+        for pulse_num in range(99055, 99058):
             try:
                 data_thread = data_thread.set_pulse(pulse_num)
-            except:
+            except Exception as error:
                 print("Data for", pulse_num, "not found. Probably dry run, skipping.")
+                print(error)
                 continue
             all_data = {}
             for parameter in params_to_retrieve:
