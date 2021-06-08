@@ -36,6 +36,10 @@ scale_height = 50
 # pulse_number = 82630
 
 # TODO add way to check for diagnostic failure, eg EFIT has failed time slices value EFL
+# TODO add flag to check for dry run?
+# TODO grabs MAGC times
+# TODO grabs MSTA correct probes
+# TODO interpolates times
 
 # --- Modules for JETPPF system
 sys.path[:0] = ["/jet/share/lib/python"]
@@ -44,33 +48,24 @@ from ppf import *
 # --- data functions
 class DATA:
     # Initialise global variables
-    def __init__(self, EFIT_params):  # MACHINE DEPENDENT
+    def __init__(self, EFIT_parameters, MAGC_parameters):  # MACHINE DEPENDENT
         # DATA.pulse = 82631
         # DATA.pulse = pulse_number
         DATA.pulse = 0
-        DATA.t = np.array([])
+        DATA.EFIT_t = np.array([])
+        DATA.MAGC_t = np.array([])
+        DATA.EFIT_x = np.array([])
+        DATA.MAGC_x = np.array([])
         DATA.psi_shift = 0.0
-        DATA.params = EFIT_params
-        for param in DATA.params:
+        DATA.EFIT_params = EFIT_parameters
+        DATA.MAGC_params = MAGC_parameters
+        for param in EFIT_parameters:
             setattr(DATA, param, np.array([]))
-
-    # https://stackoverflow.com/questions/32721580/example-of-class-with-user-input
-    """
-    @classmethod
-    def from_input(cls):
-        return cls(
-            raw_input('Name: '),
-            int(raw_input('User ID: ')), 
-            int(raw_input('Reputation: ')),
-        )
-    """
+        for param in MAGC_parameters:
+            setattr(DATA, param, np.array([]))
 
     # --- Load the pulse basic data # MACHINE DEPENDENT
     def set_pulse(self, pulse_number):
-
-        # where EFIT_params is a list of all the metrics we want to retrieve
-
-        # DATA.pulse = int(DATA.pulse_box.get_text())
         DATA.pulse = pulse_number
 
         # --- Prepare JETPPF system (yes, you need to knock before you open it...) # MACHINE DEPENDENT
@@ -79,71 +74,59 @@ class DATA:
         ier = ppfgo(pulse=DATA.pulse, seq=0)
 
         # --- Load EFIT data # MACHINE DEPENDENT
-        # Load XIP first to sort out t and x
         dda = "EFIT"
-        dtyp = "XIP"
-        ihdat, iwdat, data, x, t, ier = ppfget(
-            DATA.pulse, dda, dtyp, fix0=0, reshape=0, no_x=0, no_t=0
-        )
-        if ier != 0:
-            raise Exception("Failed to load XIP data. May not exist for pulse.")
-        DATA.EFITt = t
-        DATA.EFITx = x
-        DATA.XIP = data
-
-        # need to grab EFIT time once at beginning
-
-        for param in self.params:
+        for param in self.EFIT_params:
             dtyp = str(param)
             ihdat, iwdat, data, x, t, ier = ppfget(
                 DATA.pulse, dda, dtyp, fix0=0, reshape=0, no_x=0, no_t=0
             )
             if ier != 0:
-                raise IOError(
+                raise Exception(
                     "Failed to load {} data. May not exist for pulse.".format(dtyp)
                 )
             # DATA.EFIT_xip = data
             setattr(DATA, param, data)
-
-        # --- Load MAGC data # MACHINE DEPENDENT
+        DATA.EFIT_t = t
+        DATA.EFIT_x = x
+        """
+        # --- Use MSTA to find which diagnostics are usable
+        # Select a set of working probes
+        
         dda = "MSTA"
         dtyp = "EFUS"
         ihdat, iwdat, data, x, t, ier = ppfget(
             DATA.pulse, dda, dtyp, fix0=0, reshape=0, no_x=0, no_t=0
         )
         if ier != 0:
-            raise IOError(
+            raise Exception(
                 "Failed to load {} data. May not exist for pulse.".format(dtyp)
             )
 
-        # Check which magnetics value is usable
         DATA.MSTAt = t
         DATA.MSTAx = x
         DATA.EFUS = data
         print(DATA.EFUS)
-        print('test data',data)
-        # is this a true/false value?
+        """
 
-        if DATA.EFUS == True:
-            for param in ["BVAC", "FLX", "IPLA"]:
-                dda = "MAGC"
-                dtyp = param
-                ihdat, iwdat, data, x, t, ier = ppfget(
-                    DATA.pulse, dda, dtyp, fix0=0, reshape=0, no_x=0, no_t=0
+        # --- Load MAGC data
+        dda = "MAGC"
+        for param in self.MAGC_params:
+            dtyp = param
+            ihdat, iwdat, data, x, t, ier = ppfget(
+                DATA.pulse, dda, dtyp, fix0=0, reshape=0, no_x=0, no_t=0
+            )
+            if ier != 0:
+                raise Exception(
+                    "Failed to load {} data. May not exist for pulse.".format(dtyp)
                 )
-                if ier != 0:
-                    raise IOError(
-                        "Failed to load {} data. May not exist for pulse.".format(dtyp)
-                    )
-                setattr(DATA, param, data)
-            setattr(DATA, "MAGCx", x)
-            setattr(DATA, "MAGCt", t)
-            # may need to interpolate here to sort out different timesteps, not for RNN but y for MLP
+            setattr(DATA, param, data)
+        DATA.MAGC_t = t
+        DATA.MAGC_x = x
 
+        # may need to interpolate here to sort out different timesteps, not for RNN but y for MLP
         print("timing:")
-        print(DATA.MSTAt)
-        print(DATA.MAGCt)
-        print(DATA.EFITt)
+        print(len(self.MAGC_t))
+        print(len(self.EFIT_t))
 
         return self
 
@@ -152,34 +135,37 @@ class DATA:
 class Main:
     def __init__(self):
         # pulse_num = 86320
-        params_to_retrieve = ["FAXS", "AREA", "BTPD", "VOLM", "BTND", "BTNM", "BTPD"]
+        EFIT_params = ["FAXS", "AREA", "BTPD", "VOLM", "BTND", "BTNM", "BTPD", "XIP"]
+        MAGC_params = ["FLX", "IPLA", "BVAC"]
         # XIP automatically extracted
         # params_to_retrieve = input("EFIT params requested:")
         # pulse_num = input("Pulse number:")
-        data_thread = DATA(params_to_retrieve)
+        data_thread = DATA(EFIT_params, MAGC_params)
 
         # Extract multiple pulses
-        for pulse_num in range(99055, 99058):
+        for pulse_num in range(86320, 86321):
             try:
                 data_thread = data_thread.set_pulse(pulse_num)
-            except Exception as error:
-                print("Data for", pulse_num, "not found. Probably dry run, skipping.")
-                print(error)
+            except:
+                print("Data for", pulse_num, "not found. Possibly dry run, skipping.")
                 continue
             all_data = {}
+            params_to_retrieve = EFIT_params + MAGC_params
             for parameter in params_to_retrieve:
                 all_data[parameter] = getattr(data_thread, parameter)
-            retrieved_time = DATA.t
-            all_data["Time"] = retrieved_time
+            all_data["EFIT Time"] = DATA.EFIT_t
+            all_data["MAGC Time"] = DATA.MAGC_t
 
-            plasma_current = DATA.XIP
-            all_data["XIP"] = plasma_current
+            for key, value in all_data.items():
+                print(key, len([item for item in value if item]))
 
+            """
             df = pd.DataFrame(all_data)
             df = df.set_index("Time")
             filename = str(pulse_num) + "_EFIT.csv"
             with open(filename, mode="w") as f:
                 df.to_csv(f)
+            """
 
 
 #    gtk_thread = gtk_class(data_thread)
