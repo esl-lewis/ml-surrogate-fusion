@@ -81,7 +81,7 @@ class DATA:
                 DATA.pulse, dda, dtyp, fix0=0, reshape=0, no_x=0, no_t=0
             )
             if ier != 0:
-                raise Exception(
+                raise IOError(
                     "Failed to load {} data. May not exist for pulse.".format(dtyp)
                 )
             # DATA.EFIT_xip = data
@@ -98,7 +98,7 @@ class DATA:
             DATA.pulse, dda, dtyp, fix0=0, reshape=0, no_x=0, no_t=0
         )
         if ier != 0:
-            raise Exception(
+            raise IOError(
                 "Failed to load {} data. May not exist for pulse.".format(dtyp)
             )
 
@@ -116,7 +116,7 @@ class DATA:
                 DATA.pulse, dda, dtyp, fix0=0, reshape=0, no_x=0, no_t=0
             )
             if ier != 0:
-                raise Exception(
+                raise IOError(
                     "Failed to load {} data. May not exist for pulse.".format(dtyp)
                 )
             setattr(DATA, param, data)
@@ -143,11 +143,12 @@ class Main:
         data_thread = DATA(EFIT_params, MAGC_params)
 
         # Extract multiple pulses
-        for pulse_num in range(86320, 86321):
+        for pulse_num in range(99070, 99072):
             try:
                 data_thread = data_thread.set_pulse(pulse_num)
-            except:
+            except Exception as e:
                 print("Data for", pulse_num, "not found. Possibly dry run, skipping.")
+                print(e)
                 continue
             all_data = {}
             params_to_retrieve = EFIT_params + MAGC_params
