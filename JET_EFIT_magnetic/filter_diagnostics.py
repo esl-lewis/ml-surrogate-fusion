@@ -81,7 +81,7 @@ class DATA:
                 "Failed to load {} data. May not exist for pulse.".format(dtyp)
             )
         DATA.STBP = data
-        print(DATA.STBP)
+        #print(DATA.STBP)
 
 
         # STBP = flux probe status
@@ -95,8 +95,8 @@ class DATA:
                 "Failed to load {} data. May not exist for pulse.".format(dtyp)
             )
         DATA.STFL = data
-        print(DATA.STFL)
-        print(type(DATA.STFL))
+        #print(DATA.STFL)
+        #print(type(DATA.STFL))
 
 
         return self
@@ -109,7 +109,7 @@ class Main:
         STBP_count = np.array([321])
         STFL_count = np.array([150])
         # Extract multiple pulses
-        for pulse_num in range(99067, 99072):
+        for pulse_num in range(99060, 99072):
             print('PULSE NUMBER',pulse_num)
             try:
                 data_thread = data_thread.set_pulse(pulse_num)
@@ -128,7 +128,7 @@ class Main:
             #    print(key, len([item for item in value if item]))
         print(STBP_count)
         print(STFL_count)
-        plt.bar(STBP_count,width=0.8)
+        plt.bar(np.ararnge(len(STBP_count)),STBP_count,width=0.8)
         plt.show()
             # TODO rank most robust diagnostics here
 
