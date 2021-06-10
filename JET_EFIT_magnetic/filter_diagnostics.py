@@ -109,7 +109,7 @@ class Main:
         STBP_count = np.array([])
         STFL_count = np.array([])
         # Extract multiple pulses
-        for pulse_num in range(99070, 99072):
+        for pulse_num in range(99067, 99072):
             print('PULSE NUMBER',pulse_num)
             try:
                 data_thread = data_thread.set_pulse(pulse_num)
@@ -121,10 +121,15 @@ class Main:
 
             for parameter in ['STBP','STFL']:
                 all_data[parameter] = getattr(data_thread, parameter)
+            STBP_count = STBP_count + all_data['STBP']
+            STFL_count = STFL_count + all_data['STFL']
 
-            for key, value in all_data.items():
-                print(key, len([item for item in value if item]))
-
+            #for key, value in all_data.items():
+            #    print(key, len([item for item in value if item]))
+        print(STBP_count)
+        print(STFL_count)
+        plt.plot(STBP_count)
+        plt.show()
             # TODO rank most robust diagnostics here
 
             """
