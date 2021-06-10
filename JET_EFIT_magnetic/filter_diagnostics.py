@@ -128,7 +128,8 @@ class Main:
             #    print(key, len([item for item in value if item]))
         print(STBP_count)
         print(STFL_count)
-        plt.bar(np.arange(len(STBP_count)),STBP_count,width=0.8)
+        #plt.bar(np.arange(len(STBP_count)),STBP_count,width=0.8)
+        plt.bar(np.arange(len(STFL_count)),STFL_count,width=0.8)
         plt.show()
             # TODO rank most robust diagnostics here
         print(type(STBP_count))
