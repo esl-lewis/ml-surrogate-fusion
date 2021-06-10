@@ -132,13 +132,13 @@ class Main:
         plt.show()
             # TODO rank most robust diagnostics here
 
-            """
-            df = pd.DataFrame(all_data)
-            df = df.set_index("Time")
-            filename = str(pulse_num) + "_EFIT.csv"
-            with open(filename, mode="w") as f:
-                df.to_csv(f)
-            """
+        """
+        df = pd.DataFrame(all_data)
+        df = df.set_index("Time")
+        filename = str(pulse_num) + "_EFIT.csv"
+        with open(filename, mode="w") as f:
+            df.to_csv(f)
+        """
 
 
 #    gtk_thread = gtk_class(data_thread)
