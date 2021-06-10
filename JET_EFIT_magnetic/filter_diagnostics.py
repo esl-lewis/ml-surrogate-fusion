@@ -109,7 +109,7 @@ class Main:
         STBP_count = np.array([0])
         STFL_count = np.array([0])
         # Extract multiple pulses
-        for pulse_num in range(99050, 99072):
+        for pulse_num in range(98950, 99072):
             print('PULSE NUMBER',pulse_num)
             try:
                 data_thread = data_thread.set_pulse(pulse_num)
@@ -134,6 +134,7 @@ class Main:
         print(type(STBP_count))
         STBP_count = np.array(STBP_count)
         print(type(STBP_count))
+        # Need to upgrade numpy and python for below to work
         indices_diagnostics = np.argpartition(STBP_count,-20)[-20:]
         print('Best diagnostics indices:',indices_diagnostics)
         print('Of which working runs:',STBP_count[indices_diagnostics])
