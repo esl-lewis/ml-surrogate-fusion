@@ -96,6 +96,7 @@ class DATA:
             )
         DATA.STFL = data
         print(DATA.STFL)
+        print(type(DATA.STFL))
 
 
         return self
@@ -105,9 +106,11 @@ class DATA:
 class Main:
     def __init__(self):
         data_thread = DATA()
-
+        STBP_count = np.array([])
+        STFL_count = np.array([])
         # Extract multiple pulses
         for pulse_num in range(99070, 99072):
+            print('PULSE NUMBER',pulse_num)
             try:
                 data_thread = data_thread.set_pulse(pulse_num)
             except Exception as e:
@@ -122,7 +125,7 @@ class Main:
             for key, value in all_data.items():
                 print(key, len([item for item in value if item]))
 
-            # rank most robust diagnostics here
+            # TODO rank most robust diagnostics here
 
             """
             df = pd.DataFrame(all_data)
