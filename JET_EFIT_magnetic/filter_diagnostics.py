@@ -106,8 +106,8 @@ class DATA:
 class Main:
     def __init__(self):
         data_thread = DATA()
-        STBP_count = np.array([321])
-        STFL_count = np.array([150])
+        STBP_count = np.array([0])
+        STFL_count = np.array([0])
         # Extract multiple pulses
         for pulse_num in range(99050, 99072):
             print('PULSE NUMBER',pulse_num)
@@ -131,6 +131,9 @@ class Main:
         plt.bar(np.arange(len(STBP_count)),STBP_count,width=0.8)
         plt.show()
             # TODO rank most robust diagnostics here
+        print(type(STBP_count))
+        STBP_count = np.array(STBP_count)
+        print(type(STBP_count))
         indices_diagnostics = np.argpartition(STBP_count,-20)[-20:]
         print('Best diagnostics indices:',indices_diagnostics)
         print('Of which working runs:',STBP_count[indices_diagnostics])
