@@ -106,8 +106,8 @@ class DATA:
 class Main:
     def __init__(self):
         data_thread = DATA()
-        STBP_count = np.array([])
-        STFL_count = np.array([])
+        STBP_count = np.array([321])
+        STFL_count = np.array([150])
         # Extract multiple pulses
         for pulse_num in range(99067, 99072):
             print('PULSE NUMBER',pulse_num)
