@@ -48,16 +48,16 @@ from ppf import *
 # --- data functions
 class DATA:
     # Initialise global variables
-    def __init__(self, MAGC_parameters):  # MACHINE DEPENDENT
+    def __init__(self):  # MACHINE DEPENDENT
         # DATA.pulse = 82631
         # DATA.pulse = pulse_number
         DATA.pulse = 0
         DATA.STBP = np.array([])
         DATA.STFL = np.array([])
         DATA.psi_shift = 0.0
-        DATA.MAGC_params = MAGC_parameters
-        for param in MAGC_parameters:
-            setattr(DATA, param, np.array([]))
+        #DATA.MAGC_params = MAGC_parameters
+        #for param in MAGC_parameters:
+        #    setattr(DATA, param, np.array([]))
 
     # --- Load the pulse basic data # MACHINE DEPENDENT
     def set_pulse(self, pulse_number):
@@ -94,8 +94,8 @@ class DATA:
             raise IOError(
                 "Failed to load {} data. May not exist for pulse.".format(dtyp)
             )
-        DATA.STBP = data
-        print(DATA.STBP)
+        DATA.STFL = data
+        print(DATA.STFL)
 
 
         return self
