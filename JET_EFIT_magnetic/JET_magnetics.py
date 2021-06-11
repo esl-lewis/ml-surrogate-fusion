@@ -81,6 +81,8 @@ class DATA:
         ppfuid("JETPPF", rw="R")  # for disruption database, change to chain1
         ier = ppfgo(pulse=DATA.pulse, seq=0)
 
+        # Check all probes present and working with MSTA
+
         # --- Load MAGC data
         dda = "MAGC"
         for param in self.MAGC_params:
@@ -93,42 +95,36 @@ class DATA:
                     "Failed to load {} data. May not exist for pulse.".format(dtyp)
                 )
 
+            # filter magnetic probes
             if param == "BPME":
                 probe_indices = self.MAGC_mag
                 for probe in probe_indices:
                     print("PROBE NUM", probe)
                     probe_name = "BPME_" + str(probe)
-                    #probe = probe - 1  # accounting for indexing from zero
-                    this_probe_indices = list(range(1061*probe, (1061*probe) + 1061))
-                    print(this_probe_indices)
-
+                    # probe = probe - 1  # accounting for indexing from zero
+                    # TODO replace this hard coding 1061 with len(t)
+                    this_probe_indices = list(
+                        range(1061 * probe, (1061 * probe) + 1061)
+                    )
                     this_probe_values = np.take(data, this_probe_indices)
-                    print(this_probe_values)
-                    #self.probe_name = this_probe_values
-                    print('check here')
-                    #print(self.probe_name)
                     setattr(DATA, probe_name, this_probe_values)
-                """
-                print(data)
-                print(data.shape)
-                print(type(data))
 
-                print(probe_indices)
-                print(type(probe_indices))
-
-                filtered_array = np.take(data, probe_indices)
-                print(filtered_array)
-                print(filtered_array.size)
-                """
-                # filter magnetic probes
-
+            # filter flux probes
             elif param == "FLME":
-                print("heres where I filter flux")
-                # filter flux probes
+                probe_indices = self.MAGC_mag
+                for probe in probe_indices:
+                    print("PROBE NUM", probe)
+                    probe_name = "BPME_" + str(probe)
+                    # probe = probe - 1  # accounting for indexing from zero
+                    # TODO replace this hard coding 1061 with len(t)
+                    this_probe_indices = list(
+                        range(1061 * probe, (1061 * probe) + 1061)
+                    )
+                    this_probe_values = np.take(data, this_probe_indices)
+                    setattr(DATA, probe_name, this_probe_values)
+
             else:
                 setattr(DATA, param, data)
-
-            # setattr(DATA, param, data)
         DATA.MAGC_t = t
         DATA.MAGC_x = x
 
@@ -222,19 +218,28 @@ class Main:
                 continue
             all_data = {}
             params_to_retrieve = dir(data_thread)
+
+            only_probes = filter(
+                lambda param: (param.startswith("BPME_")) | (param.startswith("FLME_")),
+                params_to_retrieve,
+            )
+
             print(params_to_retrieve)
-            #for parameter in params_to_retrieve:
+            print(only_probes)
+            # for parameter in params_to_retrieve:
             #    all_data[parameter] = getattr(data_thread, parameter)
             # all_data["MAGC Time"] = DATA.MAGC_t
 
-            #for key, value in all_data.items():
+            # for key, value in all_data.items():
             #    print(key, len([item for item in value if item]))
-            all_data['BPME_0']=getattr(data_thread, 'BPME_0')
-            all_data['BPME_11']=getattr(data_thread, 'BPME_11')
-            print(getattr(data_thread,'BPME_23'))
+            all_data["BPME_0"] = getattr(data_thread, "BPME_0")
+            all_data["BPME_11"] = getattr(data_thread, "BPME_11")
+            print(getattr(data_thread, "BPME_23"))
             df = pd.DataFrame(all_data)
             print(df)
-            #df = df.set_index("Time")
+            # df = df.set_index("Time")
+            # maybe plot a few of these to see if they are sensible?
+
             filename = str(pulse_num) + "_magEFIT.csv"
             with open(filename, mode="w") as f:
                 df.to_csv(f)
