@@ -94,7 +94,10 @@ class DATA:
             )
         print("stbp")
         print(data)
+        print(type(data))
         for probe_number in self.MAGC_mag:
+            print("probe num", probe_number)
+            print("probe value?", data[probe_number])
             if data[probe_number] == 1:
                 print("fine!")
             elif data[probe_number] == 0:
