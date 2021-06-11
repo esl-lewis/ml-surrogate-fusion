@@ -86,7 +86,7 @@ class DATA:
                 raise IOError(
                     "Failed to load {} data. May not exist for pulse.".format(dtyp)
                 )
-
+            """
             if param == "BPME":
                 print(data)
                 print(data.shape)
@@ -105,6 +105,8 @@ class DATA:
                 # filter flux probes
             else:
                 setattr(DATA, param, data)
+            """
+            setattr(DATA, param, data)
         DATA.MAGC_t = t
         DATA.MAGC_x = x
 
@@ -204,13 +206,11 @@ class Main:
             for key, value in all_data.items():
                 print(key, len([item for item in value if item]))
 
-            """
             df = pd.DataFrame(all_data)
             df = df.set_index("Time")
-            filename = str(pulse_num) + "_EFIT.csv"
+            filename = str(pulse_num) + "_magEFIT.csv"
             with open(filename, mode="w") as f:
                 df.to_csv(f)
-            """
 
 
 #    gtk_thread = gtk_class(data_thread)
