@@ -89,10 +89,15 @@ class DATA:
 
             if param == "BPME":
                 print(data)
+                print(data.shape)
                 print(type(data))
                 probe_indices = self.MAGC_mag
                 print(probe_indices)
                 print(type(probe_indices))
+
+                filtered_array = np.take(data, probe_indices)
+                print(filtered_array)
+                print(filtered_array.size)
                 # filter magnetic probes
 
             elif param == "FLME":
