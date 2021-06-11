@@ -96,7 +96,7 @@ class DATA:
             )
         for probe_number in self.MAGC_mag:
             if data[probe_number] == 1:
-                print("fine!")
+                continue
             elif data[probe_number] == 0:
                 raise IOError(
                     "Data not found for magnetic probe {}, probably broken. Aborting.".format(
@@ -115,7 +115,7 @@ class DATA:
             )
         for probe_number in self.MAGC_flux:
             if data[probe_number] == 1:
-                print("fine!")
+                continue
             elif data[probe_number] == 0:
                 raise IOError(
                     "Data not found for flux probe {}, probably broken. Aborting.".format(
@@ -293,13 +293,13 @@ class Main:
             #    print(key, len([item for item in value if item]))
 
             df_EFIT = pd.DataFrame(EFIT_data)
-            df_EFIT = df.set_index("Time")
+            #df_EFIT = df_EFIT.set_index("Time")
             filename = str(pulse_num) + "_EFIT.csv"
             with open(filename, mode="w") as f:
                 df_EFIT.to_csv(f)
 
             df_MAGC = pd.DataFrame(MAGC_data)
-            df_MAGC = df_MAGC.set_index("Time")
+            #df_MAGC = df_MAGC.set_index("Time")
             filename = str(pulse_num) + "_MAGC.csv"
             with open(filename, mode="w") as f:
                 df_MAGC.to_csv(f)
