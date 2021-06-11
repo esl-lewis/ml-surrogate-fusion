@@ -199,6 +199,7 @@ class Main:
             30,
             32,
             34,
+            320,
         ]
         flux_loops = [
             4,
