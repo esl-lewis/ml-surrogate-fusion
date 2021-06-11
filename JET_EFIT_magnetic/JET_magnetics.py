@@ -81,8 +81,34 @@ class DATA:
         ppfuid("JETPPF", rw="R")  # for disruption database, change to chain1
         ier = ppfgo(pulse=DATA.pulse, seq=0)
 
-        # Check all probes present and working with MSTA
+        # --- Use MSTA to find which diagnostics are usable
+        # check magnetic probe status
+        dda = "MSTA"
+        dtyp = "STBP"
+        ihdat, iwdat, data, x, t, ier = ppfget(
+            DATA.pulse, dda, dtyp, fix0=0, reshape=0, no_x=0, no_t=0
+        )
+        if ier != 0:
+            raise IOError(
+                "Failed to load {} data. May not exist for pulse.".format(dtyp)
+            )
+        for probe_number in self.MAGC_mag:
+            if data[probe_number] == 1:
+                print("fine!")
+            elif data[probe_number] == 0:
+                print("broken probe!")
 
+        # check flux probe status
+        """dtyp = "STFL"
+        ihdat, iwdat, data, x, t, ier = ppfget(
+            DATA.pulse, dda, dtyp, fix0=0, reshape=0, no_x=0, no_t=0
+        )
+        if ier != 0:
+            raise IOError(
+                "Failed to load {} data. May not exist for pulse.".format(dtyp)
+            )
+        DATA.STFL = data
+"""
         # --- Load MAGC data
         dda = "MAGC"
         for param in self.MAGC_params:
@@ -143,7 +169,7 @@ class Main:
         # pulse_num = 86320
         # EFIT_params = ["FAXS", "FBND"]  # BOTH
         # MAGC_params = ["BPME", "FLME", "BVAC", "FLX", "IPLA"]
-        MAGC_params = ["BPME"]
+        MAGC_params = ["BPME", "FLME"]
 
         magnetic_probes = [
             0,
