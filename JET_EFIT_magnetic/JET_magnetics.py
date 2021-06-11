@@ -60,7 +60,8 @@ class DATA:
         DATA.MAGC_t = np.array([])
         DATA.EFIT_x = np.array([])
         DATA.MAGC_x = np.array([])
-        flux_probes
+        DATA.MAGC_mag = magnetic_probes
+        DATA.MAGC_flux = flux_probes
         DATA.MAGC_params = MAGC_parameters
         for param in MAGC_parameters:
             setattr(DATA, param, np.array([]))
@@ -85,7 +86,20 @@ class DATA:
                 raise IOError(
                     "Failed to load {} data. May not exist for pulse.".format(dtyp)
                 )
-            setattr(DATA, param, data)
+
+            if param == "BPME":
+                print(data)
+                print(type(data))
+                probe_indices = self.MAGC_mag
+                print(probe_indices)
+                print(type(probe_indices))
+                # filter magnetic probes
+
+            elif param == "FLME":
+                print("heres where I filter flux")
+                # filter flux probes
+            else:
+                setattr(DATA, param, data)
         DATA.MAGC_t = t
         DATA.MAGC_x = x
 
