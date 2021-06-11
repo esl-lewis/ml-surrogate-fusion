@@ -227,15 +227,14 @@ class Main:
 
             print(params_to_retrieve)
             print("should only be probes", filtered_params)
-            # for parameter in params_to_retrieve:
-            #    all_data[parameter] = getattr(data_thread, parameter)
-            # all_data["MAGC Time"] = DATA.MAGC_t
+
+            for parameter in filtered_params:
+                all_data[parameter] = getattr(data_thread, parameter)
+            all_data["MAGC Time"] = DATA.MAGC_t
 
             # for key, value in all_data.items():
             #    print(key, len([item for item in value if item]))
-            all_data["BPME_0"] = getattr(data_thread, "BPME_0")
-            all_data["BPME_11"] = getattr(data_thread, "BPME_11")
-            print(getattr(data_thread, "BPME_23"))
+
             df = pd.DataFrame(all_data)
             print(df)
             # df = df.set_index("Time")
