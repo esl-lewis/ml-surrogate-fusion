@@ -111,7 +111,7 @@ class DATA:
 
             # filter flux probes
             elif param == "FLME":
-                probe_indices = self.MAGC_mag
+                probe_indices = self.MAGC_flux
                 for probe in probe_indices:
                     print("FLME PROBE NUM", probe)
                     probe_name = "FLME_" + str(probe)
