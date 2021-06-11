@@ -92,6 +92,8 @@ class DATA:
             raise IOError(
                 "Failed to load {} data. May not exist for pulse.".format(dtyp)
             )
+        print("stbp")
+        print(data)
         for probe_number in self.MAGC_mag:
             if data[probe_number] == 1:
                 print("fine!")
@@ -155,8 +157,6 @@ class DATA:
         DATA.MAGC_x = x
 
         # may need to interpolate here to sort out different timesteps, not for RNN but y for MLP
-        print("timing:")
-        print(len(self.MAGC_t))
 
         return self
 
@@ -259,7 +259,7 @@ class Main:
                 print(key, len([item for item in value if item]))
 
             df = pd.DataFrame(all_data)
-            print(df)
+            # print(df)
             # df = df.set_index("Time")
             # maybe plot a few of these to see if they are sensible?
 
