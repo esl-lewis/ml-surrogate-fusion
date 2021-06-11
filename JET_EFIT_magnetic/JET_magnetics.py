@@ -98,13 +98,16 @@ class DATA:
                 for probe in probe_indices:
                     print("PROBE NUM", probe)
                     probe_name = "BPME_" + str(probe)
-                    probe = probe - 1  # accounting for indexing from zero
-                    this_probe_indices = list(range(probe, probe + 1061))
+                    #probe = probe - 1  # accounting for indexing from zero
+                    this_probe_indices = list(range(1061*probe, (1061*probe) + 1061))
                     print(this_probe_indices)
 
                     this_probe_values = np.take(data, this_probe_indices)
-                    self.probe_name = this_probe_values
-                    # setattr(DATA, probe_name, this_probe_values)
+                    print(this_probe_values)
+                    #self.probe_name = this_probe_values
+                    print('check here')
+                    #print(self.probe_name)
+                    setattr(DATA, probe_name, this_probe_values)
                 """
                 print(data)
                 print(data.shape)
@@ -218,16 +221,20 @@ class Main:
                 print(e)
                 continue
             all_data = {}
-            params_to_retrieve = MAGC_params
-            for parameter in params_to_retrieve:
-                all_data[parameter] = getattr(data_thread, parameter)
+            params_to_retrieve = dir(data_thread)
+            print(params_to_retrieve)
+            #for parameter in params_to_retrieve:
+            #    all_data[parameter] = getattr(data_thread, parameter)
             # all_data["MAGC Time"] = DATA.MAGC_t
 
-            for key, value in all_data.items():
-                print(key, len([item for item in value if item]))
-
+            #for key, value in all_data.items():
+            #    print(key, len([item for item in value if item]))
+            all_data['BPME_0']=getattr(data_thread, 'BPME_0')
+            all_data['BPME_11']=getattr(data_thread, 'BPME_11')
+            print(getattr(data_thread,'BPME_23'))
             df = pd.DataFrame(all_data)
-            df = df.set_index("Time")
+            print(df)
+            #df = df.set_index("Time")
             filename = str(pulse_num) + "_magEFIT.csv"
             with open(filename, mode="w") as f:
                 df.to_csv(f)
