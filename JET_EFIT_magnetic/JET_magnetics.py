@@ -99,7 +99,7 @@ class DATA:
             if param == "BPME":
                 probe_indices = self.MAGC_mag
                 for probe in probe_indices:
-                    print("PROBE NUM", probe)
+                    print("BPME PROBE NUM", probe)
                     probe_name = "BPME_" + str(probe)
                     # probe = probe - 1  # accounting for indexing from zero
                     # TODO replace this hard coding 1061 with len(t)
@@ -113,8 +113,8 @@ class DATA:
             elif param == "FLME":
                 probe_indices = self.MAGC_mag
                 for probe in probe_indices:
-                    print("PROBE NUM", probe)
-                    probe_name = "BPME_" + str(probe)
+                    print("FLME PROBE NUM", probe)
+                    probe_name = "FLME_" + str(probe)
                     # probe = probe - 1  # accounting for indexing from zero
                     # TODO replace this hard coding 1061 with len(t)
                     this_probe_indices = list(
