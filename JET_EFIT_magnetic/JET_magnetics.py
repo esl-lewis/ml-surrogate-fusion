@@ -65,6 +65,12 @@ class DATA:
         DATA.MAGC_params = MAGC_parameters
         for param in MAGC_parameters:
             setattr(DATA, param, np.array([]))
+        for probe in magnetic_probes:
+            probe_name = "BPME_" + str(probe)
+            setattr(DATA, probe_name, np.array([]))
+        for probe in flux_probes:
+            probe_name = "FLME_" + str(probe)
+            setattr(DATA, probe_name, np.array([]))
 
     # --- Load the pulse basic data # MACHINE DEPENDENT
     def set_pulse(self, pulse_number):
@@ -91,13 +97,14 @@ class DATA:
                 probe_indices = self.MAGC_mag
                 for probe in probe_indices:
                     print("PROBE NUM", probe)
-                    probe_name = "BPME_" + probe
+                    probe_name = "BPME_" + str(probe)
                     probe = probe - 1  # accounting for indexing from zero
                     this_probe_indices = list(range(probe, probe + 1061))
                     print(this_probe_indices)
 
                     this_probe_values = np.take(data, this_probe_indices)
-                    setattr(DATA, probe_name, this_probe_values)
+                    self.probe_name = this_probe_values
+                    # setattr(DATA, probe_name, this_probe_values)
                 """
                 print(data)
                 print(data.shape)
@@ -118,7 +125,7 @@ class DATA:
             else:
                 setattr(DATA, param, data)
 
-            setattr(DATA, param, data)
+            # setattr(DATA, param, data)
         DATA.MAGC_t = t
         DATA.MAGC_x = x
 
