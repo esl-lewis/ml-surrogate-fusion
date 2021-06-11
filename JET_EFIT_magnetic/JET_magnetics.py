@@ -86,18 +86,30 @@ class DATA:
                 raise IOError(
                     "Failed to load {} data. May not exist for pulse.".format(dtyp)
                 )
-            """
+
             if param == "BPME":
+                probe_indices = self.MAGC_mag
+                for probe in probe_indices:
+                    print("PROBE NUM", probe)
+                    probe_name = "BPME_" + probe
+                    probe = probe - 1  # accounting for indexing from zero
+                    this_probe_indices = list(range(probe, probe + 1061))
+                    print(this_probe_indices)
+
+                    this_probe_values = np.take(data, this_probe_indices)
+                    setattr(DATA, probe_name, this_probe_values)
+                """
                 print(data)
                 print(data.shape)
                 print(type(data))
-                probe_indices = self.MAGC_mag
+
                 print(probe_indices)
                 print(type(probe_indices))
 
                 filtered_array = np.take(data, probe_indices)
                 print(filtered_array)
                 print(filtered_array.size)
+                """
                 # filter magnetic probes
 
             elif param == "FLME":
@@ -105,7 +117,7 @@ class DATA:
                 # filter flux probes
             else:
                 setattr(DATA, param, data)
-            """
+
             setattr(DATA, param, data)
         DATA.MAGC_t = t
         DATA.MAGC_x = x
@@ -216,5 +228,5 @@ class Main:
 
 #    gtk_thread = gtk_class(data_thread)
 #    gtk.main()
-
+# TODO ask gabor if BPME to MAGC are in order, assuming yes...
 Main()
