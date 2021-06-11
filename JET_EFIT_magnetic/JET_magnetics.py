@@ -124,7 +124,8 @@ class Main:
     def __init__(self):
         # pulse_num = 86320
         # EFIT_params = ["FAXS", "FBND"]  # BOTH
-        MAGC_params = ["BPME", "FLME", "BVAC", "FLX", "IPLA"]
+        # MAGC_params = ["BPME", "FLME", "BVAC", "FLX", "IPLA"]
+        MAGC_params = ["BPME"]
 
         magnetic_probes = [
             0,
