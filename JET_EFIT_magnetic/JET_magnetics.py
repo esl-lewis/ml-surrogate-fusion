@@ -92,19 +92,18 @@ class DATA:
             raise IOError(
                 "Failed to load {} data. May not exist for pulse.".format(dtyp)
             )
-        print("stbp")
-        print(data)
-        print(type(data))
         for probe_number in self.MAGC_mag:
-            print("probe num", probe_number)
-            print("probe value?", data[probe_number])
             if data[probe_number] == 1:
                 print("fine!")
             elif data[probe_number] == 0:
-                print("broken probe!")
+                raise IOError(
+                    "Data not found for magnetic probe {}, probably broken. Aborting.".format(
+                        probe_number
+                    )
+                )
 
         # check flux probe status
-        """dtyp = "STFL"
+        dtyp = "STFL"
         ihdat, iwdat, data, x, t, ier = ppfget(
             DATA.pulse, dda, dtyp, fix0=0, reshape=0, no_x=0, no_t=0
         )
@@ -112,8 +111,16 @@ class DATA:
             raise IOError(
                 "Failed to load {} data. May not exist for pulse.".format(dtyp)
             )
-        DATA.STFL = data
-"""
+        for probe_number in self.MAGC_flux:
+            if data[probe_number] == 1:
+                print("fine!")
+            elif data[probe_number] == 0:
+                raise IOError(
+                    "Data not found for flux probe {}, probably broken. Aborting.".format(
+                        probe_number
+                    )
+                )
+
         # --- Load MAGC data
         dda = "MAGC"
         for param in self.MAGC_params:
@@ -201,6 +208,7 @@ class Main:
             34,
             320,
         ]
+        # add 320 here to test broken probe
         flux_loops = [
             4,
             6,
