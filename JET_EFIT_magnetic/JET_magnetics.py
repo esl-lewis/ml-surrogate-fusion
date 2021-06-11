@@ -223,9 +223,10 @@ class Main:
                 lambda param: (param.startswith("BPME_")) | (param.startswith("FLME_")),
                 params_to_retrieve,
             )
+            filtered_params = list(only_probes)
 
             print(params_to_retrieve)
-            print(only_probes)
+            print("should only be probes", filtered_params)
             # for parameter in params_to_retrieve:
             #    all_data[parameter] = getattr(data_thread, parameter)
             # all_data["MAGC Time"] = DATA.MAGC_t
