@@ -288,7 +288,7 @@ class Main:
 
             for parameter in filtered_params:
                 MAGC_data[parameter] = getattr(data_thread, parameter)
-            MAGC_data["MAGC Time"] = DATA.MAGC_t
+            MAGC_data["Time"] = DATA.MAGC_t
 
             # for key, value in all_data.items():
             #    print(key, len([item for item in value if item]))
