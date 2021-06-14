@@ -275,9 +275,9 @@ class Main:
             # df = df.set_index("Time")
             # maybe plot a few of these to see if they are sensible?
 
-            filename = str(pulse_num) + "_magEFIT.csv"
-            with open(filename, mode="w") as f:
-                df.to_csv(f)
+            # filename = str(pulse_num) + "_magEFIT.csv"
+            # with open(filename, mode="w") as f:
+            #    df.to_csv(f)
 
 
 #    gtk_thread = gtk_class(data_thread)

@@ -84,7 +84,7 @@ class DATA:
         #print(DATA.STBP)
 
 
-        # STBP = flux probe status
+        # STFL = flux probe status
         dda = "MSTA"
         dtyp = "STFL"
         ihdat, iwdat, data, x, t, ier = ppfget(

@@ -1,5 +1,6 @@
 from numpy.core.arrayprint import DatetimeFormat
 
+# EFIT + magnetics
 
 try:
     import sys, traceback
@@ -293,13 +294,13 @@ class Main:
             #    print(key, len([item for item in value if item]))
 
             df_EFIT = pd.DataFrame(EFIT_data)
-            #df_EFIT = df_EFIT.set_index("Time")
+            # df_EFIT = df_EFIT.set_index("Time")
             filename = str(pulse_num) + "_EFIT.csv"
             with open(filename, mode="w") as f:
                 df_EFIT.to_csv(f)
 
             df_MAGC = pd.DataFrame(MAGC_data)
-            #df_MAGC = df_MAGC.set_index("Time")
+            # df_MAGC = df_MAGC.set_index("Time")
             filename = str(pulse_num) + "_MAGC.csv"
             with open(filename, mode="w") as f:
                 df_MAGC.to_csv(f)
