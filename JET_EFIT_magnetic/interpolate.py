@@ -2,8 +2,20 @@ import numpy as np
 import csv
 import pandas as pd
 import bisect
+import sys, os
 
-## Linear interpolation 
+## Linear interpolation
+dir_path = os.path.dirname(os.path.realpath(__file__))
+
+file_list = []
+dataframe_list = []
+
+for folder, subfolder, files in os.walk(dir_path):
+    for f in files:
+        if "interpolate.py" not in f:
+            # ignore self
+            full_path = os.path.join(folder, f)
+            file_list.append(full_path)
 
 """
 data_series1 = [16, 9, 4, 1, -4, -9, 16]
@@ -22,6 +34,7 @@ df1 = pd.DataFrame.from_dict(data1)
 df2 = pd.DataFrame.from_dict(data2)
 """
 
+
 def interpolate_dataframes(dataframe1, dataframe2):
     """ Where time_series are dataframes, transforming df1 timestep into 2
         returning dataframe2 with interpolated dataframe1 values added"""
@@ -31,10 +44,10 @@ def interpolate_dataframes(dataframe1, dataframe2):
 
     max_series2 = time_series2.max()
     min_series2 = time_series2.min()
-    #print('df2 max time')
-    #print(max_series2)
-    #print('df2 min time')
-    #print(min_series2)
+    # print('df2 max time')
+    # print(max_series2)
+    # print('df2 min time')
+    # print(min_series2)
 
     def interpolate(timestep1, value1, timestep2, value2, time_to_interp):
         grad = (value1 - value2) / (timestep1 - timestep2)
@@ -61,61 +74,93 @@ def interpolate_dataframes(dataframe1, dataframe2):
             print(e, "skipping")
             continue
         time.append(times)
-        #print("grabbed nearest times", time_above, time_below)
+        # print("grabbed nearest times", time_above, time_below)
         above_val = dataframe1.loc[dataframe1["Time"] == time_above]
         below_val = dataframe1.loc[dataframe1["Time"] == time_below]
 
         above_val = above_val.drop(columns=["Time"])
         below_val = below_val.drop(columns=["Time"])
 
-        #print('values below')
-        #print(below_val) 
+        # print('values below')
+        # print(below_val)
 
-        #print('values above')
-        #print(above_val) 
-        #print(type(above_val))
+        # print('values above')
+        # print(above_val)
+        # print(type(above_val))
 
         interpolated_values = []
-        for params in range(0,len(above_val.columns)):
-            #print('col index',params)
-            #print(below_val.iloc[0,params])
-            #print(above_val.iloc[0,params])
+        for params in range(0, len(above_val.columns)):
+            # print('col index',params)
+            # print(below_val.iloc[0,params])
+            # print(above_val.iloc[0,params])
 
-            inter_val = interpolate(time_above, above_val.iloc[0,params], time_below, below_val.iloc[0,params], times)
-            #print('calculated val:',inter_val)
+            inter_val = interpolate(
+                time_above,
+                above_val.iloc[0, params],
+                time_below,
+                below_val.iloc[0, params],
+                times,
+            )
+            # print('calculated val:',inter_val)
             interpolated_values.append(inter_val)
-        with_columns = dict(zip(above_val.columns,interpolated_values))
+        with_columns = dict(zip(above_val.columns, interpolated_values))
         data.append(with_columns)
 
     print(time)
     print(data)
 
-    reformat_data = {
-    k: [d.get(k) for d in data]
-    for k in set().union(*data)}    
-
+    reformat_data = {k: [d.get(k) for d in data] for k in set().union(*data)}
 
     # Apply to whole dataframe
-    time = {'Time':time}
-    results = dict(time,**reformat_data)
+    time = {"Time": time}
+    results = dict(time, **reformat_data)
     print(results)
 
-    #print(results)
+    # print(results)
     results = pd.DataFrame.from_dict(results)
-    results.set_index('Time')
-    dataframe2.set_index('Time')
-    dataframe2=dataframe2.astype("float64", errors="ignore")
-    results=results.astype("float64", errors="ignore")
-    dataframe2 = dataframe2.merge(results,how='outer')
+    results.set_index("Time")
+    dataframe2.set_index("Time")
+    dataframe2 = dataframe2.astype("float64", errors="ignore")
+    results = results.astype("float64", errors="ignore")
+    dataframe2 = dataframe2.merge(results, how="outer")
     print(dataframe2)
 
     return dataframe2
 
 
+print(file_list)
+for sep_file in file_list:
+    # print(sep_file)
+    full_filename = os.path.basename(sep_file)
+    # filename, file_extension = os.path.splitext(sep_file)
+    # print(filename)
+    filename, file_extension = os.path.splitext(full_filename)
+    # print(filename, file_extension)
+    if file_extension == ".csv":
+        try:
+            pulsenum, dda = filename.split("_")
+            print(pulsenum)
+            print(dda)
+        except:
+            print("not a valid file")
+            continue
+        if dda == "EFIT":
+            mag_filename = str(pulsenum) + "_MAGC" + ".csv"
+            df_efit = pd.read_csv(full_filename)
+            df_magc = pd.read_csv(mag_filename)
+
+            interpolated_df = interpolate_dataframes(df_efit, df_magc)
+            interpolated_filename = str(pulsenum) + "interpolated" + ".csv"
+            interpolated_df.to_csv(interpolated_filename)
+
+    # if file_extension == ".csv":
+    #    print(filename)
+
+
 """
 df3 = interpolate_dataframes(df1, df2)
 
-"""
+
 df_mag = pd.read_csv('99070_EFIT.csv')
 df_efit = pd.read_csv('99070_MAGC.csv')
 
@@ -124,3 +169,4 @@ df_efit = pd.read_csv('99070_MAGC.csv')
 df3 = interpolate_dataframes(df_efit, df_mag)
 
 df3.to_csv('interpolated_99070.csv')
+"""
