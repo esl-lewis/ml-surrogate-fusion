@@ -13,14 +13,14 @@ data_series2 = [23, 43, 234, 1, 2]
 
 df1 = pd.DataFrame(list(zip(data_series1, time_series1)), columns=["data", "time"])
 df2 = pd.DataFrame(list(zip(data_series2, time_series2)), columns=["data", "time"])
-"""
+
 
 data1 = {'Time': [10, 20, 30, 40, 50, 60, 70], 'data_x': [16, 9, 4, 1, -4, -9, 16],'data_y': [2,44, 2, 1,12,43,1],'data_f':[12,432,54,12,345,5,3]}
 data2 = {'Time': [0, 15, 30, 45, 60], 'data_z': [3, 9, 12, 15, 43],'data_i': [2, 44, 2, 1,12]}
 
 df1 = pd.DataFrame.from_dict(data1)
 df2 = pd.DataFrame.from_dict(data2)
-
+"""
 
 def interpolate_dataframes(dataframe1, dataframe2):
     """ Where time_series are dataframes, transforming df1 timestep into 2
@@ -112,7 +112,7 @@ def interpolate_dataframes(dataframe1, dataframe2):
     return dataframe2
 
 
-
+"""
 df3 = interpolate_dataframes(df1, df2)
 
 """
@@ -124,4 +124,3 @@ df_efit = pd.read_csv('99070_MAGC.csv')
 df3 = interpolate_dataframes(df_efit, df_mag)
 
 df3.to_csv('interpolated_99070.csv')
-"""
