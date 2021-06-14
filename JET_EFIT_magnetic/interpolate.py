@@ -61,7 +61,7 @@ def interpolate_dataframes(dataframe1, dataframe2):
             t_above = timeseries[idx]
             return (t_below, t_above)
         else:
-            raise ValueError(f"Timestep {timestep} is out of bounds")
+            raise ValueError("Timestep {} is out of bounds".format(timestep))
 
     time = []
     data = []
