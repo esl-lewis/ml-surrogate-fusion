@@ -123,6 +123,7 @@ def interpolate_dataframes(dataframe1, dataframe2):
     dataframe2 = dataframe2.astype("float64", errors="ignore")
     results = results.astype("float64", errors="ignore")
     dataframe2 = dataframe2.merge(results, how="outer")
+    #dataframe2 = dataframe2.dropna(axis=0)
     print(dataframe2)
 
     return dataframe2
@@ -150,7 +151,7 @@ for sep_file in file_list:
             df_magc = pd.read_csv(mag_filename)
 
             interpolated_df = interpolate_dataframes(df_efit, df_magc)
-            interpolated_filename = str(pulsenum) + "interpolated" + ".csv"
+            interpolated_filename = str(pulsenum) + "_interpolated" + ".csv"
             interpolated_df.to_csv(interpolated_filename)
 
     # if file_extension == ".csv":
