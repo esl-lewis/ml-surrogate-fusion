@@ -44,8 +44,8 @@ def interpolate_dataframes(dataframe1, dataframe2):
     time_series1 = dataframe1["Time"]
     time_series2 = dataframe2["Time"]
 
-    max_series2 = time_series2.max()
-    min_series2 = time_series2.min()
+    # max_series2 = time_series2.max()
+    # min_series2 = time_series2.min()
     # print('df2 max time')
     # print(max_series2)
     # print('df2 min time')
@@ -108,31 +108,30 @@ def interpolate_dataframes(dataframe1, dataframe2):
         with_columns = dict(zip(above_val.columns, interpolated_values))
         data.append(with_columns)
 
-    print(time)
-    print(data)
+    # print(time)
+    # print(data)
 
     reformat_data = {k: [d.get(k) for d in data] for k in set().union(*data)}
 
     # Apply to whole dataframe
     time = {"Time": time}
     results = dict(time, **reformat_data)
-    print(results)
-
     # print(results)
+
     results = pd.DataFrame.from_dict(results)
     results.set_index("Time")
     dataframe2.set_index("Time")
     dataframe2 = dataframe2.astype("float64", errors="ignore")
     results = results.astype("float64", errors="ignore")
     results = dataframe2.merge(results, how="outer")
-    print(results)
+    # print(results)
 
     return results
 
 
 # print(file_list)
 for sep_file in file_list:
-    print(sep_file)
+    # print(sep_file)
     full_filename = os.path.basename(sep_file)
     # filename, file_extension = os.path.splitext(sep_file)
     # print(filename)
