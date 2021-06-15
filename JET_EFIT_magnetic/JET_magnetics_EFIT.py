@@ -124,28 +124,7 @@ class DATA:
                         probe_number
                     )
                 )
-        ier = ppfgo(pulse=DATA.pulse, seq=0)
-        ppfuid("chain1", rw="R")
-        ier = ppfgo(pulse=DATA.pulse, seq=0)
-        # --- Load EFIT data # MACHINE DEPENDENT
-        dda = "EFIT"
-        for param in self.EFIT_params:
-            dtyp = param
-            ihdat, iwdat, data, x, t, ier = ppfget(
-                DATA.pulse, dda, dtyp, fix0=0, reshape=0, no_x=0, no_t=0
-            )
-            if ier != 0:
-                raise IOError(
-                    "Failed to load {} data. May not exist for pulse.".format(dtyp)
-                )
-            # DATA.EFIT_xip = data
-            setattr(DATA, param, data)
-        DATA.EFIT_t = t
-        DATA.EFIT_x = x
 
-        ier = ppfgo(pulse=DATA.pulse, seq=0)
-        ppfuid("JETPPF", rw="R")
-        ier = ppfgo(pulse=DATA.pulse, seq=0)
         # --- Load MAGC data
         dda = "MAGC"
         for param in self.MAGC_params:
@@ -191,15 +170,32 @@ class DATA:
         DATA.MAGC_t = t
         DATA.MAGC_x = x
 
-        # may need to interpolate here to sort out different timesteps, not for RNN but y for MLP
+        # Switching over to chain1 EFIT so comparison to MAGC is valid
+        ier = ppfgo(pulse=DATA.pulse, seq=0)
+        ppfuid("chain1", rw="R")
+        ier = ppfgo(pulse=DATA.pulse, seq=0)
+        # --- Load EFIT data # MACHINE DEPENDENT
+        dda = "EFIT"
+        for param in self.EFIT_params:
+            dtyp = param
+            ihdat, iwdat, data, x, t, ier = ppfget(
+                DATA.pulse, dda, dtyp, fix0=0, reshape=0, no_x=0, no_t=0
+            )
+            if ier != 0:
+                raise IOError(
+                    "Failed to load {} data. May not exist for pulse.".format(dtyp)
+                )
+            # DATA.EFIT_xip = data
+            setattr(DATA, param, data)
+        DATA.EFIT_t = t
+        DATA.EFIT_x = x
+
         print("timing:")
         print(len(self.MAGC_t))
         print(len(self.EFIT_t))
 
         return self
 
-
-# TODO CHECK IF I CAN JUST PPFGET THE TIME I WANT
 
 # Main function to run whole thing
 class Main:
