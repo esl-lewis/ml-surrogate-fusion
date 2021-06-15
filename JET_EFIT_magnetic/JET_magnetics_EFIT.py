@@ -8,20 +8,21 @@ try:
     import csv
     import pandas as pd
 
-    #import py_flush as Flush
+    # import py_flush as Flush
     from scipy import optimize
 
     # from math import pi, sin, cos, sqrt, exp, atan2, tanh, cosh
-    #import gtk
+    # import gtk
     import matplotlib
     import matplotlib.pyplot as plt
-    #from matplotlib.widgets import Slider
-    #from matplotlib.backends.backend_gtkagg import FigureCanvasGTKAgg as FigureCanvas
-    #from matplotlib.figure import Figure
-    #from matplotlib.figure import Axes
-    #from matplotlib.backends.backend_gtkagg import (
+
+    # from matplotlib.widgets import Slider
+    # from matplotlib.backends.backend_gtkagg import FigureCanvasGTKAgg as FigureCanvas
+    # from matplotlib.figure import Figure
+    # from matplotlib.figure import Axes
+    # from matplotlib.backends.backend_gtkagg import (
     #    NavigationToolbar2GTK as NavigationToolbar,
-    #)
+    # )
     import os
 except:
     print("-------failed to import module!---------")

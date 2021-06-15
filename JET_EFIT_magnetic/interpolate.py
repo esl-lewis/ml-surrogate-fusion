@@ -38,6 +38,8 @@ df2 = pd.DataFrame.from_dict(data2)
 def interpolate_dataframes(dataframe1, dataframe2):
     """ Where time_series are dataframes, transforming df1 timestep into 2
         returning dataframe2 with interpolated dataframe1 values added"""
+    dataframe1.drop
+
     # Figure out if time1 is in range of 2
     time_series1 = dataframe1["Time"]
     time_series2 = dataframe2["Time"]
@@ -122,16 +124,15 @@ def interpolate_dataframes(dataframe1, dataframe2):
     dataframe2.set_index("Time")
     dataframe2 = dataframe2.astype("float64", errors="ignore")
     results = results.astype("float64", errors="ignore")
-    dataframe2 = dataframe2.merge(results, how="outer")
-    #dataframe2 = dataframe2.dropna(axis=0)
-    print(dataframe2)
+    results = dataframe2.merge(results, how="outer")
+    print(results)
 
-    return dataframe2
+    return results
 
 
-print(file_list)
+# print(file_list)
 for sep_file in file_list:
-    # print(sep_file)
+    print(sep_file)
     full_filename = os.path.basename(sep_file)
     # filename, file_extension = os.path.splitext(sep_file)
     # print(filename)
@@ -140,23 +141,21 @@ for sep_file in file_list:
     if file_extension == ".csv":
         try:
             pulsenum, dda = filename.split("_")
-            print(pulsenum)
-            print(dda)
+            # print(pulsenum)
+            # print(dda)
         except:
             print("not a valid file")
             continue
         if dda == "EFIT":
             mag_filename = str(pulsenum) + "_MAGC" + ".csv"
-            df_efit = pd.read_csv(full_filename)
-            df_magc = pd.read_csv(mag_filename)
+            df_efit = pd.read_csv(full_filename, index_col=0)
+            df_magc = pd.read_csv(mag_filename, index_col=0)
 
             interpolated_df = interpolate_dataframes(df_efit, df_magc)
+            interpolated_df.set_index("Time")
+            interpolated_df = interpolated_df.dropna(axis=0)
             interpolated_filename = str(pulsenum) + "_interpolated" + ".csv"
-            interpolated_df.to_csv(interpolated_filename)
-
-    # if file_extension == ".csv":
-    #    print(filename)
-
+            interpolated_df.to_csv(interpolated_filename, index=False)
 
 """
 df3 = interpolate_dataframes(df1, df2)
