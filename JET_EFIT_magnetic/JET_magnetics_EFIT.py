@@ -124,7 +124,9 @@ class DATA:
                         probe_number
                     )
                 )
-
+        ier = ppfgo(pulse=DATA.pulse, seq=0)
+        ppfuid("chain1", rw="R")
+        ier = ppfgo(pulse=DATA.pulse, seq=0)
         # --- Load EFIT data # MACHINE DEPENDENT
         dda = "EFIT"
         for param in self.EFIT_params:
@@ -141,6 +143,9 @@ class DATA:
         DATA.EFIT_t = t
         DATA.EFIT_x = x
 
+        ier = ppfgo(pulse=DATA.pulse, seq=0)
+        ppfuid("JETPPF", rw="R")
+        ier = ppfgo(pulse=DATA.pulse, seq=0)
         # --- Load MAGC data
         dda = "MAGC"
         for param in self.MAGC_params:
