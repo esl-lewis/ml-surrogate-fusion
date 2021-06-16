@@ -33,9 +33,7 @@ for sep_file in file_list:
         # if pulse_df["Time"]
 
         time_sampled_df = pulse_df[
-            pulse_df["Time"]
-            .astype(str)
-            .str.contains(r"[0-9]+.25[0-9]+|[0-9]+.75[0-9]+")
+            pulse_df["Time"].astype(str).str.contains(r"[0-9]+.2[0-9]+|[0-9]+.7[0-9]+")
         ]
         print(time_sampled_df)
 
