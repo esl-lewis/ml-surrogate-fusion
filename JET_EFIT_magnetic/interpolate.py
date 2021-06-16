@@ -150,7 +150,7 @@ for sep_file in file_list:
             df_efit = pd.read_csv(full_filename, index_col=0)
             df_magc = pd.read_csv(mag_filename, index_col=0)
 
-            interpolated_df = interpolate_dataframes(df_efit, df_magc)
+            interpolated_df = interpolate_dataframes(df_magc, df_efit)
             interpolated_df.set_index("Time")
             interpolated_df = interpolated_df.dropna(axis=0)
             interpolated_filename = str(pulsenum) + "_interpolated" + ".csv"

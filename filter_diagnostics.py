@@ -7,20 +7,20 @@ try:
     import csv
     import pandas as pd
 
-    import py_flush as Flush
+    #import py_flush as Flush
     from scipy import optimize
 
     # from math import pi, sin, cos, sqrt, exp, atan2, tanh, cosh
-    import gtk
+    #import gtk
     import matplotlib
     import matplotlib.pyplot as plt
-    from matplotlib.widgets import Slider
-    from matplotlib.backends.backend_gtkagg import FigureCanvasGTKAgg as FigureCanvas
-    from matplotlib.figure import Figure
-    from matplotlib.figure import Axes
-    from matplotlib.backends.backend_gtkagg import (
-        NavigationToolbar2GTK as NavigationToolbar,
-    )
+    #from matplotlib.widgets import Slider
+    #from matplotlib.backends.backend_gtkagg import FigureCanvasGTKAgg as FigureCanvas
+    #from matplotlib.figure import Figure
+    #from matplotlib.figure import Axes
+    #from matplotlib.backends.backend_gtkagg import (
+    #    NavigationToolbar2GTK as NavigationToolbar,
+    #)
     import os
 except:
     print("-------failed to import module!---------")
@@ -109,7 +109,7 @@ class Main:
         STBP_count = np.array([0])
         STFL_count = np.array([0])
         # Extract multiple pulses
-        for pulse_num in range(98950, 99072):
+        for pulse_num in range(98972, 99072):
             print('PULSE NUMBER',pulse_num)
             try:
                 data_thread = data_thread.set_pulse(pulse_num)
@@ -128,18 +128,18 @@ class Main:
             #    print(key, len([item for item in value if item]))
         print(STBP_count)
         print(STFL_count)
-        #plt.bar(np.arange(len(STBP_count)),STBP_count,width=0.8)
-        plt.bar(np.arange(len(STFL_count)),STFL_count,width=0.8)
+        plt.bar(np.arange(len(STBP_count)),STBP_count,width=0.8)
+        #plt.bar(np.arange(len(STFL_count)),STFL_count,width=0.8)
         plt.show()
             # TODO rank most robust diagnostics here
         print(type(STBP_count))
         STBP_count = np.array(STBP_count)
         print(type(STBP_count))
         # Need to upgrade numpy and python for below to work
-        indices_diagnostics = np.argpartition(STBP_count,-20)[-20:]
+        indices_diagnostics = np.argpartition(STBP_count,-150)[-150:]
         print('Best diagnostics indices:',indices_diagnostics)
         print('Of which working runs:',STBP_count[indices_diagnostics])
-
+        # remember to add 1 to probe num to account for offset
         """
         df = pd.DataFrame(all_data)
         df = df.set_index("Time")
