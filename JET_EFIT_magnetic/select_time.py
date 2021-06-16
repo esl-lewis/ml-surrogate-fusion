@@ -2,7 +2,6 @@ import numpy as np
 import csv
 import pandas as pd
 import os
-import regex as re
 
 # select all interpolated csvs
 
