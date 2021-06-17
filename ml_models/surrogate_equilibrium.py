@@ -26,15 +26,15 @@ for run in range(5):
     # Start a run, tracking hyperparameters
     wandb.init(
         project="surrogate-equilibrium",
-        entity="EL",
+        entity="esllewis",
         # Set entity to specify your username or team name
         # ex: entity="carey",
         config={
             "layer_1": 12,
-            "activation_1": tf.nn.leaky_relu,
+            "activation_1": "relu",
             "dropout": random.uniform(0.01, 0.80),
             "layer_2": 10,
-            "activation_2": tf.nn.leaky_relu,
+            "activation_2": "relu",
             "layer_3": 7,
             "optimizer": "adam",
             "loss": "mse",
@@ -123,7 +123,7 @@ for header in list(train_features.keys()):
 all_features = tf.keras.layers.concatenate(encoded_features)
 # print(all_features)
 x = tf.keras.layers.Dense(config.layer_1, activation=config.activation_1)(all_features)
-x = tf.keras.layers.Dense(config.layer_2, activation=tf.nn.activation_2)(x)
+x = tf.keras.layers.Dense(config.layer_2, activation=config.activation_2)(x)
 x = tf.keras.layers.Dropout(config.dropout)(x)
 x = tf.keras.layers.Dense(config.layer_3)(x)
 output = tf.keras.layers.Dense(1)(x)
