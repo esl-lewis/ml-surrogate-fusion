@@ -35,7 +35,7 @@ for run in range(5):
             "dropout": random.uniform(0.01, 0.80),
             "layer_2": 10,
             "activation_2": tf.nn.leaky_relu,
-            "layer_3":,7
+            "layer_3": 7,
             "optimizer": "adam",
             "loss": "mse",
             "metric": "mae",
