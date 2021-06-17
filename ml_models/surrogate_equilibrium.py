@@ -3,6 +3,7 @@ import pandas as pd
 import tensorflow as tf
 from tensorflow import keras
 import matplotlib.pyplot as plt
+import wandb
 
 # from matplotlib import cm
 
@@ -15,6 +16,34 @@ import matplotlib.pyplot as plt
 from tensorflow.keras import layers
 from tensorflow.keras.layers.experimental import preprocessing
 from sklearn.model_selection import train_test_split
+from tensorflow.keras.callbacks import Callback
+from wandb.keras import WandbCallback
+import random
+
+
+# Launch 5 experiments, trying different dropout rates
+for run in range(5):
+    # Start a run, tracking hyperparameters
+    wandb.init(
+        project="surrogate-equilibrium",
+        entity="EL",
+        # Set entity to specify your username or team name
+        # ex: entity="carey",
+        config={
+            "layer_1": 12,
+            "activation_1": tf.nn.leaky_relu,
+            "dropout": random.uniform(0.01, 0.80),
+            "layer_2": 10,
+            "activation_2": tf.nn.leaky_relu,
+            "layer_3":,7
+            "optimizer": "adam",
+            "loss": "mse",
+            "metric": "mae",
+            "epoch": 6,
+            "batch_size": 32,
+        },
+    )
+    config = wandb.config
 
 
 def get_normalization_layer(name, dataset):
@@ -67,7 +96,7 @@ print(len(X_test), "test examples")
 # train_dataset = tf.data.Dataset.from_tensor_slices((dict(X_train), y_train))
 # train_dataset = train_dataset.shuffle(len(X_train)).batch(3)
 # train_dataset = train_dataset.prefetch(3)
-batch_size = 30
+batch_size = config.batch_size
 
 train_dataset = df_to_dataset(X_train, y_train, batch_size=batch_size)
 val_dataset = df_to_dataset(X_val, y_val, shuffle=False, batch_size=batch_size)
@@ -93,20 +122,29 @@ for header in list(train_features.keys()):
 
 all_features = tf.keras.layers.concatenate(encoded_features)
 # print(all_features)
-x = tf.keras.layers.Dense(10, activation=tf.nn.leaky_relu)(all_features)
-x = tf.keras.layers.Dense(20, activation=tf.nn.leaky_relu)(x)
-x = tf.keras.layers.Dropout(0.05)(x)
-x = tf.keras.layers.Dense(10)(x)
+x = tf.keras.layers.Dense(config.layer_1, activation=config.activation_1)(all_features)
+x = tf.keras.layers.Dense(config.layer_2, activation=tf.nn.activation_2)(x)
+x = tf.keras.layers.Dropout(config.dropout)(x)
+x = tf.keras.layers.Dense(config.layer_3)(x)
 output = tf.keras.layers.Dense(1)(x)
-
 model = tf.keras.Model(all_inputs, output)
+
 model.compile(
-    optimizer="adam", loss="mse", metrics=["mae"],
-)
-history = model.fit(
-    train_dataset, epochs=15, validation_data=val_dataset, batch_size=batch_size
+    optimizer=config.optimizer, loss=config.loss, metrics=[config.metric],
 )
 
+history = model.fit(
+    train_dataset,
+    epochs=config.epoch,
+    validation_data=val_dataset,
+    batch_size=config.batch_size,
+    callbacks=[WandbCallback()],
+)
+
+wandb.finish()
+
+
+"""
 loss = history.history["loss"]
 val_loss = history.history["val_loss"]
 
@@ -119,6 +157,7 @@ plt.ylabel("Mean squared error loss")
 plt.xlabel("Epoch")
 plt.legend()
 plt.show()
+"""
 
 # loss, accuracy = model.evaluate(test_dataset)
 # print("Accuracy", accuracy)
