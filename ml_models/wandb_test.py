@@ -1,9 +1,22 @@
+# ugly workaround bc six is not working
+import os, imp
+
+
+def load_src(name, fpath):
+    import os, imp
+
+    return imp.load_source(name, os.path.join(os.path.dirname(__file__), fpath))
+
+
+load_src("six", "./six.py")
+
 import wandb
 
 wandb.login()
 
 import math
 import random
+
 
 # Launch 5 simulated experiments
 for run in range(5):
