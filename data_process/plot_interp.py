@@ -37,14 +37,12 @@ plt.scatter(
 )
 """
 for column_val in mag_df.columns:
-    if column_val == "Time":
+    if column_val.startswith("FLME"):
+        plt.plot(
+            mag_df["Time"], mag_df[column_val], marker="x", label=str(column_val),
+        )
+    else:
         continue
-    elif column_val.startswith("BPME"):
-        continue
-    print(column_val)
-    plt.plot(
-        mag_df["Time"], mag_df[column_val], marker="x", label=str(column_val),
-    )
 """
 plt.plot(
     mag_df["Time"], mag_df["BPME_19"], color="red", marker="x", label="Probe 19 raw",
