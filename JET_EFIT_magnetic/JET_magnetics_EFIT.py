@@ -249,6 +249,7 @@ class Main:
         data_thread = DATA(EFIT_params, MAGC_params, flux_loops, magnetic_probes)
 
         # Extract multiple pulses
+        # 98972 - 99072, for big range
         for pulse_num in range(99070, 99072):
             try:
                 data_thread = data_thread.set_pulse(pulse_num)
@@ -269,6 +270,13 @@ class Main:
                 all_params,
             )
             filtered_params = list(only_probes)
+
+            MAGC_params = ["BPME", "FLME", "BVAC", "FLX", "IPLA"]
+            for parameter in MAGC_params:
+                if parameter.startswith("BPME") | parameter.startswith("FLME"):
+                    continue
+                filtered_params.append(parameter)
+            print("filtered params:", filtered_params)
 
             for parameter in filtered_params:
                 MAGC_data[parameter] = getattr(data_thread, parameter)
