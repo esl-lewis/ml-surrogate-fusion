@@ -1,9 +1,9 @@
+# for tweaking model without W and B logging
 import numpy as np
 import pandas as pd
 import tensorflow as tf
 from tensorflow import keras
 import matplotlib.pyplot as plt
-import wandb
 
 # from matplotlib import cm
 
@@ -11,40 +11,51 @@ import wandb
 # TODO implement early stopping
 # TODO sort GPU use for scaling
 # TODO how to optimise hyperparameters? DARTS?
-# TODO setup wandb.ai
+# TODO get rid of normalising, is fucking us up
 
 from tensorflow.keras import layers
 from tensorflow.keras.layers.experimental import preprocessing
 from sklearn.model_selection import train_test_split
 from tensorflow.keras.callbacks import Callback
-from wandb.keras import WandbCallback
 from tensorflow.keras.layers import LeakyReLU  # this is already covered by import
 import random
 
+from tensorflow.python.ops.gen_sparse_ops import add_many_sparse_to_tensors_map
+
 leaky_relu = LeakyReLU(alpha=0.01)
-# Launch 5 experiments, trying different dropout rates
-for run in range(5):
-    # Start a run, tracking hyperparameters
-    wandb.init(
-        project="surrogate-equilibrium",
-        entity="esllewis",
-        # Set entity to specify your username or team name
-        # ex: entity="carey",
-        config={
-            "layer_1": 12,
-            "activation_1": leaky_relu,
-            "dropout": random.uniform(0.01, 0.80),
-            "layer_2": 10,
-            "activation_2": "relu",
-            "layer_3": 7,
-            "optimizer": "adam",
-            "loss": "mae",
-            "metric": "mae",
-            "epoch": 6,
-            "batch_size": 32,
-        },
-    )
-    config = wandb.config
+"""
+config = {
+    "layer_1": 12,
+    "activation_1": leaky_relu,
+    "dropout": random.uniform(0.01, 0.80),
+    "layer_2": 10,
+    "activation_2": "relu",
+    "layer_3": 7,
+    "optimizer": "adam",
+    "loss": "mae",
+    "metric": "mae",
+    "epoch": 6,
+    "batch_size": 32,
+}
+"""
+
+
+class CONFIG:
+    def __init__(self):
+        CONFIG.layer_1 = 12
+        CONFIG.activation_1 = leaky_relu
+        CONFIG.dropout = random.uniform(0.01, 0.80)
+        CONFIG.layer_2 = 10
+        CONFIG.activation_2 = "relu"
+        CONFIG.layer_3 = 7
+        CONFIG.optimizer = "adam"
+        CONFIG.loss = "mae"
+        CONFIG.metric = "accuracy"
+        CONFIG.epoch = 6
+        CONFIG.batch_size = 32
+
+
+config = CONFIG()
 
 
 def get_normalization_layer(name, dataset):
@@ -71,6 +82,18 @@ def df_to_dataset(dataframe_X, dataframe_y, shuffle=True, batch_size=32):
     return ds
 
 
+def plot_loss(history):
+    plt.plot(history.history["loss"], label="loss")
+    plt.plot(history.history["val_loss"], label="val_loss")
+    plt.ylim([0, 10])
+    plt.title("Training and validation loss")
+    plt.xlabel("Epoch")
+    plt.ylabel("Error [MAE]")
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+
+
 pulse_data = pd.read_csv("../JET_EFIT_magnetic/sampled_data.csv")
 pulse_data = pulse_data.dropna(axis=0)
 
@@ -83,6 +106,7 @@ X = pulse_data.drop(["FAXS", "FBND", "Time"], axis=1)
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, random_state=24
 )
+
 X_train, X_val, y_train, y_val = train_test_split(
     X_train, y_train, test_size=0.2, random_state=24
 )
@@ -92,6 +116,35 @@ print(len(X_train), "train examples")
 print(len(X_val), "validation examples")
 print(len(X_test), "test examples")
 
+
+model = tf.keras.models.Sequential(
+    [
+        tf.keras.layers.Dense(40, input_dim=35),
+        tf.keras.layers.Dense(20, activation="relu"),
+        tf.keras.layers.Dense(10),
+    ]
+)
+
+print(model.summary())
+
+model.compile(
+    optimizer="adam", loss="mape", metrics="mape",
+)
+
+num_epochs = 100
+# Not worried about memory or local minima
+batchSize = len(X_train)
+
+# Train on data
+history = model.fit(
+    X_train,
+    y_train,
+    validation_data=(X_val, y_val),
+    batch_size=batchSize,
+    epochs=num_epochs,
+)
+
+"""
 
 # Use tensorflow dataset object for batching
 # train_dataset = tf.data.Dataset.from_tensor_slices((dict(X_train), y_train))
@@ -122,7 +175,8 @@ for header in list(train_features.keys()):
     encoded_features.append(encoded_numeric_col)
 
 all_features = tf.keras.layers.concatenate(encoded_features)
-# print(all_features)
+print("ALL FEATURES")
+print(all_features)
 
 x = tf.keras.layers.Dense(config.layer_1, activation=config.activation_1)(
     all_features
@@ -144,16 +198,29 @@ history = model.fit(
     epochs=config.epoch,
     validation_data=val_dataset,
     batch_size=config.batch_size,
-    callbacks=[WandbCallback()],
 )
 
 
 # loss, mean_ab_error = model.evaluate(test_dataset)
 # print("MAE on test set", mean_ab_error)
+plot_loss(history)
+# test_results = {} might be good to see how different feature inputs perform, eg just flux, flux + magnetic, magnetic+ pulse... https://www.tensorflow.org/tutorials/keras/regression
 
-wandb.finish()
+MAE = model.evaluate(test_dataset, verbose=0)
+print("MAE on test set", MAE)
 
+test_predictions = model.predict(test_dataset).flatten()
 
+a = plt.axes(aspect="equal")
+plt.scatter(test_predictions, y_test)  # get actual true test values in here somehow
+plt.xlabel("True Values [FAXS]")
+plt.ylabel("Predictions [FAXS]")
+lims = [0, 50]
+plt.xlim(lims)
+plt.ylim(lims)
+_ = plt.plot(lims, lims)
+plt.show()
+"""
 """
 #wandb takes care of this
 loss = history.history["loss"]
