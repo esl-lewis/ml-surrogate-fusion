@@ -7,12 +7,13 @@ from pandas.core.reshape.merge import merge
 
 # plotting the interp MAGC against normal MAGC and EFIT to get an idea of problem
 
-MAGC_file = "99071_MAGC.csv"
-EFIT_file = "99071_EFIT.csv"
-INTERP_file = "./99071_interpolated.csv"
+MAGC_file = "../JET_EFIT_magnetic/99071_MAGC.csv"
+EFIT_file = "../JET_EFIT_magnetic/99071_EFIT.csv"
+# INTERP_file = "./99071_interpolated.csv"
 
-
+"""
 interp_df = pd.read_csv(INTERP_file)
+"""
 # interp_plot = interp_df[["Time", "BPME_19"]]
 # interp_plot = interp_plot.set_index(["Time"])
 
@@ -26,6 +27,7 @@ mag_df = pd.read_csv(MAGC_file)
 # print(mag_plot.head(4))
 # print(merge_df.head(4))
 # plt.plot(merge_df["Time"], merge_df["BPME_19"])
+"""
 plt.scatter(
     interp_df["Time"],
     interp_df["BPME_19"],
@@ -33,10 +35,28 @@ plt.scatter(
     marker=".",
     label="Probe 19 interpolated",
 )
-plt.scatter(
+"""
+for column_val in mag_df.columns:
+    if column_val == "Time":
+        continue
+    elif column_val.startswith("BPME"):
+        continue
+    print(column_val)
+    plt.plot(
+        mag_df["Time"], mag_df[column_val], marker="x", label=str(column_val),
+    )
+"""
+plt.plot(
     mag_df["Time"], mag_df["BPME_19"], color="red", marker="x", label="Probe 19 raw",
 )
-
+plt.plot(
+    mag_df["Time"], mag_df["BPME_11"], color="blue", marker="x", label="Probe 11 raw",
+)
+plt.plot(
+    mag_df["Time"], mag_df["BPME_14"], color="black", marker="x", label="Probe 14 raw",
+)
+"""
+"""
 plt.scatter(
     interp_df["Time"],
     interp_df["BPME_27"],
@@ -47,7 +67,8 @@ plt.scatter(
 plt.scatter(
     mag_df["Time"], mag_df["BPME_27"], color="blue", marker="x", label="Probe 27 raw"
 )
-plt.legend(loc="center right")
+"""
+# plt.legend(loc="center right")
 plt.xlabel("Time /s")
-plt.ylabel("Magnetic probe output (Wb?)")
+plt.ylabel("Flux probe output (Wb?)")
 plt.show()
