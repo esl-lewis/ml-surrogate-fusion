@@ -23,6 +23,7 @@ import random
 
 leaky_relu = LeakyReLU(alpha=0.01)
 # Launch 5 experiments, trying different dropout rates
+"""
 for run in range(5):
     # Start a run, tracking hyperparameters
     wandb.init(
@@ -45,6 +46,7 @@ for run in range(5):
         },
     )
     config = wandb.config
+"""
 
 
 def get_normalization_layer(name, dataset):
@@ -71,10 +73,16 @@ def df_to_dataset(dataframe_X, dataframe_y, shuffle=True, batch_size=32):
     return ds
 
 
-pulse_data = pd.read_csv("../JET_EFIT_magnetic/sampled_data.csv")
+def get_callbacks():
+    return [
+        tf.keras.callbacks.EarlyStopping(monitor="val_loss", patience=3),
+    ]
+
+
+pulse_data = pd.read_csv("../JET_EFIT_magnetic/all_data.csv")
 pulse_data = pulse_data.dropna(axis=0)
 
-y = pulse_data["FAXS"]
+y = pulse_data["FBND"] - pulse_data["FAXS"]
 X = pulse_data.drop(["FAXS", "FBND", "Time"], axis=1)
 
 # print(X.head(3))
@@ -92,7 +100,46 @@ print(len(X_train), "train examples")
 print(len(X_val), "validation examples")
 print(len(X_test), "test examples")
 
+N_VALIDATION = int(len(X_val))
+N_TRAIN = int(len(X_train))
+BUFFER_SIZE = N_TRAIN
+BATCH_SIZE = 50  # can crank this up
+STEPS_PER_EPOCH = N_TRAIN // BATCH_SIZE
 
+lr_schedule = tf.keras.optimizers.schedules.InverseTimeDecay(
+    0.001, decay_steps=STEPS_PER_EPOCH * 1000, decay_rate=1, staircase=False
+)
+
+
+def get_optimizer():
+    return tf.keras.optimizers.Adam(lr_schedule)
+
+
+normalizer = preprocessing.Normalization(axis=-1)
+normalizer.adapt(np.array(X_train))
+
+tiny_model = tf.keras.Sequential(
+    [normalizer, layers.Dense(16, activation="elu"), layers.Dense(1)]
+)
+
+optimizer = get_optimizer()
+
+tiny_model.compile(
+    optimizer=optimizer, loss="mean_absolute_error", metrics="mean_absolute_error"
+)
+
+history = tiny_model.fit(
+    X_train,
+    y_train,
+    steps_per_epoch=STEPS_PER_EPOCH,
+    epochs=100,
+    validation_data=(X_val, y_val),
+    callbacks=[WandbCallback(), get_callbacks()],
+    verbose=0,
+)
+
+
+"""
 # Use tensorflow dataset object for batching
 # train_dataset = tf.data.Dataset.from_tensor_slices((dict(X_train), y_train))
 # train_dataset = train_dataset.shuffle(len(X_train)).batch(3)
@@ -147,9 +194,10 @@ history = model.fit(
     callbacks=[WandbCallback()],
 )
 
-
+"""
 # loss, mean_ab_error = model.evaluate(test_dataset)
 # print("MAE on test set", mean_ab_error)
+
 
 wandb.finish()
 
