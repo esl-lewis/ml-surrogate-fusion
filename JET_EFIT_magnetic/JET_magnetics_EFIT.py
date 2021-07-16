@@ -188,8 +188,8 @@ class DATA:
             # DATA.EFIT_xip = data
             if (param == "P") | (param == "DFDP"):
                 print("P/DFDP check", data.shape)
-                np.reshape(data, (33, -1))
-                 print("P/DFDP check", data.shape)
+                data = np.reshape(data, (33, -1))
+                print("P/DFDP check", data.shape)
                 data = data[:, 0]  # check this, could be data[0,:]
                 print("P/DFDP check", data.shape)
             setattr(DATA, param, data)
