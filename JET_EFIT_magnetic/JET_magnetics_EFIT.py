@@ -186,8 +186,8 @@ class DATA:
                     "Failed to load {} data. May not exist for pulse.".format(dtyp)
                 )
             # DATA.EFIT_xip = data
-            if (param == "P") | (param == 'DFDP') :
-                data = data[0]  # ?
+            if (param == "P") | (param == "DFDP"):
+                data = data[0]  # check this
             setattr(DATA, param, data)
         DATA.EFIT_t = t
         DATA.EFIT_x = x
@@ -203,11 +203,7 @@ class DATA:
 class Main:
     def __init__(self):
         # pulse_num = 86320
-        EFIT_params = [
-            "FAXS",
-            "FBND",
-            "P",
-        ]  # BOTH
+        EFIT_params = ["FAXS", "FBND", "P", "DFDP"]  # BOTH
         # use P, try predict R and Z
         MAGC_params = ["BPME", "FLME", "BVAC", "FLX", "IPLA"]
 
@@ -272,6 +268,9 @@ class Main:
             EFIT_data["Time"] = DATA.EFIT_t
 
             all_params = dir(data_thread)
+
+            print("ALL PARAMS(?)", all_params)
+
             only_probes = filter(
                 lambda param: (param.startswith("BPME_")) | (param.startswith("FLME_")),
                 all_params,
