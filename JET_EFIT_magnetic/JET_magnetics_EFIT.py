@@ -187,7 +187,9 @@ class DATA:
                 )
             # DATA.EFIT_xip = data
             if (param == "P") | (param == "DFDP"):
-                data = data[0]  # check this
+                print("P/DFDP check", data.shape)
+                data = data[:, 0]  # check this, could be data[0,:]
+                print("P/DFDP check", data.shape)
             setattr(DATA, param, data)
         DATA.EFIT_t = t
         DATA.EFIT_x = x
