@@ -186,6 +186,8 @@ class DATA:
                     "Failed to load {} data. May not exist for pulse.".format(dtyp)
                 )
             # DATA.EFIT_xip = data
+            if (param == "P") | (param == 'DFDP') :
+                data = data[0]  # ?
             setattr(DATA, param, data)
         DATA.EFIT_t = t
         DATA.EFIT_x = x
@@ -201,7 +203,12 @@ class DATA:
 class Main:
     def __init__(self):
         # pulse_num = 86320
-        EFIT_params = ["FAXS", "FBND"]  # BOTH
+        EFIT_params = [
+            "FAXS",
+            "FBND",
+            "P",
+        ]  # BOTH
+        # use P, try predict R and Z
         MAGC_params = ["BPME", "FLME", "BVAC", "FLX", "IPLA"]
 
         magnetic_probes = [
