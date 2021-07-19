@@ -4,6 +4,7 @@ import tensorflow as tf
 from tensorflow import keras
 import matplotlib.pyplot as plt
 import wandb
+import os
 
 # from matplotlib import cm
 
@@ -12,6 +13,7 @@ import wandb
 # TODO sort GPU use for scaling
 # TODO how to optimise hyperparameters? DARTS?
 # TODO setup wandb.ai
+# TODO put leaky relu and adam back in having made wandb work
 
 from tensorflow.keras import layers
 from tensorflow.keras.layers.experimental import preprocessing
@@ -20,32 +22,32 @@ from tensorflow.keras.callbacks import Callback
 from wandb.keras import WandbCallback
 from tensorflow.keras.layers import LeakyReLU  # this is already covered by import
 import random
+import argparse
 
-leaky_relu = LeakyReLU(alpha=0.01)
-# Launch 5 experiments, trying different dropout rates
+
+wandb.login()
+
+# default hyperparameter values
+PROJECT_NAME = "surrogate-equilibrium"
+MODEL_NOTES = "default small network"
+BATCH_SIZE = 32
+DROPOUT = 0.6973
+EPOCHS = 100
+L1_SIZE = 12
+L2_SIZE = 10
+HIDDEN_LAYER_SIZE = 128
+INITIAL_LEARNING_RATE = 0.001
+DECAY_RATE = 1
+LEAKY_ALPHA = 0.3
+
 """
-for run in range(5):
-    # Start a run, tracking hyperparameters
-    wandb.init(
-        project="surrogate-equilibrium",
-        entity="esllewis",
-        # Set entity to specify your username or team name
-        # ex: entity="carey",
-        config={
-            "layer_1": 12,
-            "activation_1": leaky_relu,
-            "dropout": random.uniform(0.01, 0.80),
-            "layer_2": 10,
-            "activation_2": "relu",
-            "layer_3": 7,
-            "optimizer": "adam",
-            "loss": "mae",
-            "metric": "mae",
-            "epoch": 6,
-            "batch_size": 32,
-        },
-    )
-    config = wandb.config
+# "activation_1": leaky_relu, # note leaky relu needs to be its own layer
+"activation_1": "relu",
+"dropout": random.uniform(0.01, 0.80),
+"activation_2": "relu",
+"optimizer": "sgd",
+"loss": "mae",
+"metric": "mae",
 """
 
 
@@ -79,64 +81,140 @@ def get_callbacks():
     ]
 
 
-pulse_data = pd.read_csv("../JET_EFIT_magnetic/all_data.csv")
-pulse_data = pulse_data.dropna(axis=0)
+def train_nn(args):
+    # initialize wandb logging
+    wandb.init(project=args.project_name, notes=args.notes)
+    wandb.config.update(args)
+    # leaky_relu = LeakyReLU(alpha=0.01)
 
-y = pulse_data["FBND"] - pulse_data["FAXS"]
-X = pulse_data.drop(["FAXS", "FBND", "Time"], axis=1)
+    # load data
+    # pulse_data = pd.read_csv("../JET_EFIT_magnetic/all_data.csv")
+    pulse_data = pd.read_csv("../JET_EFIT_magnetic/interpolated_99070.csv")
+    pulse_data = pulse_data.dropna(axis=0)
 
-# print(X.head(3))
+    y = pulse_data["FBND"] - pulse_data["FAXS"]
+    X = pulse_data.drop(["FAXS", "FBND", "Time"], axis=1)
 
-# Split into train/test with sklearn
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.2, random_state=24
-)
-X_train, X_val, y_train, y_val = train_test_split(
-    X_train, y_train, test_size=0.2, random_state=24
-)
+    # Split into train/test with sklearn
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=24
+    )
+    X_train, X_val, y_train, y_val = train_test_split(
+        X_train, y_train, test_size=0.2, random_state=24
+    )
+
+    N_VALIDATION = int(len(X_val))
+    N_TRAIN = int(len(X_train))
+    BUFFER_SIZE = N_TRAIN
+    BATCH_SIZE = 50  # can crank this up
+    STEPS_PER_EPOCH = N_TRAIN // BATCH_SIZE
+
+    lr_schedule = tf.keras.optimizers.schedules.InverseTimeDecay(
+        INITIAL_LEARNING_RATE, (STEPS_PER_EPOCH * 1000), DECAY_RATE, staircase=False
+    )
+
+    def get_optimizer():
+        return tf.keras.optimizers.Adam(lr_schedule)
+
+    normalizer = preprocessing.Normalization(axis=-1)
+    normalizer.adapt(np.array(X_train))
+
+    tiny_model = tf.keras.Sequential(
+        [
+            normalizer,
+            layers.Dense(args.l1_size),
+            layers.LeakyReLU(alpha=args.leaky_alpha),
+            layers.Dropout(args.dropout),
+            layers.Dense(args.l2_size),
+            layers.LeakyReLU(alpha=args.leaky_alpha),
+            layers.Dense(1),
+        ]
+    )
+
+    optimizer = get_optimizer()
+
+    tiny_model.compile(
+        optimizer=optimizer, loss="mean_absolute_error", metrics="mean_absolute_error"
+    )
+
+    print("MODEL COMPILED")
+
+    tiny_model.fit(
+        X_train,
+        y_train,
+        # steps_per_epoch=STEPS_PER_EPOCH,
+        batch_size=args.batch_size,
+        epochs=args.epoch,
+        validation_data=(X_val, y_val),
+        callbacks=[WandbCallback(), get_callbacks()],
+        verbose=0,
+    )
+    print("MODEL TRAINED")
 
 
-print(len(X_train), "train examples")
-print(len(X_val), "validation examples")
-print(len(X_test), "test examples")
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-m",
+        "--notes",
+        type=str,
+        default=MODEL_NOTES,
+        help="Notes about the training run",
+    )
+    parser.add_argument(
+        "-p", "--project_name", type=str, default=PROJECT_NAME, help="Main project name"
+    )
+    parser.add_argument(
+        "-b", "--batch_size", type=int, default=BATCH_SIZE, help="batch_size"
+    )
+    parser.add_argument(
+        "--dropout", type=float, default=DROPOUT, help="dropout before dense layers"
+    )
+    parser.add_argument(
+        "-e",
+        "--epochs",
+        type=int,
+        default=EPOCHS,
+        help="number of training epochs (passes through full training data)",
+    )
+    parser.add_argument(
+        "--hidden_layer_size",
+        type=int,
+        default=HIDDEN_LAYER_SIZE,
+        help="hidden layer size",
+    )
+    parser.add_argument(
+        "-l1", "--layer_1_size", type=int, default=L1_SIZE, help="layer 1 size"
+    )
+    parser.add_argument(
+        "-l2", "--layer_2_size", type=int, default=L2_SIZE, help="layer 2 size"
+    )
+    parser.add_argument(
+        "-lr",
+        "--learning_rate",
+        type=float,
+        default=INITIAL_LEARNING_RATE,
+        help="learning rate",
+    )
+    parser.add_argument(
+        "--decay", type=float, default=DECAY_RATE, help="learning rate decay"
+    )
+    parser.add_argument(
+        "--leaky_alpha", type=float, default=LEAKY_ALPHA, help="leaky relu alpha value"
+    )
 
-N_VALIDATION = int(len(X_val))
-N_TRAIN = int(len(X_train))
-BUFFER_SIZE = N_TRAIN
-BATCH_SIZE = 50  # can crank this up
-STEPS_PER_EPOCH = N_TRAIN // BATCH_SIZE
+    parser.add_argument(
+        "-q", "--dry_run", action="store_true", help="Dry run (do not log to wandb)"
+    )
 
-lr_schedule = tf.keras.optimizers.schedules.InverseTimeDecay(
-    0.001, decay_steps=STEPS_PER_EPOCH * 1000, decay_rate=1, staircase=False
-)
+    args = parser.parse_args()
 
+    # easier testing--don't log to wandb if dry run is set
+    if args.dry_run:
+        os.environ["WANDB_MODE"] = "dryrun"
+        print("in dry run mode?")
 
-def get_optimizer():
-    return tf.keras.optimizers.Adam(lr_schedule)
-
-
-normalizer = preprocessing.Normalization(axis=-1)
-normalizer.adapt(np.array(X_train))
-
-tiny_model = tf.keras.Sequential(
-    [normalizer, layers.Dense(16, activation="elu"), layers.Dense(1)]
-)
-
-optimizer = get_optimizer()
-
-tiny_model.compile(
-    optimizer=optimizer, loss="mean_absolute_error", metrics="mean_absolute_error"
-)
-
-history = tiny_model.fit(
-    X_train,
-    y_train,
-    steps_per_epoch=STEPS_PER_EPOCH,
-    epochs=100,
-    validation_data=(X_val, y_val),
-    callbacks=[WandbCallback(), get_callbacks()],
-    verbose=0,
-)
+    train_nn(args)
 
 
 """
@@ -201,39 +279,3 @@ history = model.fit(
 
 wandb.finish()
 
-
-"""
-#wandb takes care of this
-loss = history.history["loss"]
-val_loss = history.history["val_loss"]
-
-epochs = range(1, len(loss) + 1)
-
-plt.plot(epochs, loss, "bo", label="Training loss")
-plt.plot(epochs, val_loss, "b", color="red", label="Validation loss")
-plt.title("Training and validation loss")
-plt.ylabel("Mean squared error loss")
-plt.xlabel("Epoch")
-plt.legend()
-plt.show()
-"""
-
-
-"""
-model = tf.keras.models.Sequential(
-    [tf.keras.layers.Dense(10, activation="relu"), tf.keras.layers.Dense(1)]
-)
-
-model.compile(
-    optimizer="adam", loss="mse", metrics=["mae"],
-)
-
-# model.fit(train_dataset, epochs=2)
-model.fit(
-    X_train,
-    y_train,
-    validation_data=(X_test, y_test),
-    batch_size=len(X_train),
-    epochs=5,
-)
-"""

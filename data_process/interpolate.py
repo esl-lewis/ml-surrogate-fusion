@@ -4,6 +4,7 @@ import pandas as pd
 import bisect
 import sys, os
 
+"""
 ## Linear interpolation
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -16,6 +17,8 @@ for folder, subfolder, files in os.walk(dir_path):
             # ignore self
             full_path = os.path.join(folder, f)
             file_list.append(full_path)
+"""
+
 
 """
 data_series1 = [16, 9, 4, 1, -4, -9, 16]
@@ -129,6 +132,7 @@ def interpolate_dataframes(dataframe1, dataframe2):
     return results
 
 
+"""
 # print(file_list)
 for sep_file in file_list:
     # print(sep_file)
@@ -155,17 +159,18 @@ for sep_file in file_list:
             interpolated_df = interpolated_df.dropna(axis=0)
             interpolated_filename = str(pulsenum) + "_interpolated" + ".csv"
             interpolated_df.to_csv(interpolated_filename, index=False)
-
 """
-df3 = interpolate_dataframes(df1, df2)
+
+# df3 = interpolate_dataframes(df1, df2)
 
 
-df_mag = pd.read_csv('99070_EFIT.csv')
-df_efit = pd.read_csv('99070_MAGC.csv')
+df_mag = pd.read_csv("..\JET_EFIT_magnetic\99070_EFIT.csv", index_col=0)
+df_efit = pd.read_csv("..\JET_EFIT_magnetic\99070_MAGC.csv", index_col=0)
 
 
 # Returns dataframe 1 data in dataframe 2 time series steps
-df3 = interpolate_dataframes(df_efit, df_mag)
+interpolated_df = interpolate_dataframes(df_efit, df_mag)
+interpolated_df.set_index("Time")
+interpolated_df = interpolated_df.dropna(axis=0)
+interpolated_df.to_csv("interpolated_99070.csv", index=False)
 
-df3.to_csv('interpolated_99070.csv')
-"""

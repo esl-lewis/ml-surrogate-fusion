@@ -17,6 +17,8 @@ for folder, subfolder, files in os.walk(dir_path):
             full_path = os.path.join(folder, f)
             file_list.append(full_path)
 
+print(file_list)
+
 for sep_file in file_list:
     # print(sep_file)
     full_filename = os.path.basename(sep_file)
@@ -38,13 +40,17 @@ for sep_file in file_list:
 
         merged_df = df_magc.merge(df_efit, how="outer", on="Time")
         merged_df = merged_df.dropna(axis=0)
+
+        merged_name = str(pulsenum) + "_merged" + ".csv"
+        merged_df["FBND-FAXS"] = merged_df["FBND"] - merged_df["FAXS"]
+        merged_df.to_csv(merged_name, index=False)
         print(merged_df.head(2))
-        print(merged_df.shape)
-        dataframe_list.append(merged_df)
 
-final_df = pd.concat(dataframe_list)
+        # dataframe_list.append(merged_df)
+
+# final_df = pd.concat(dataframe_list)
 
 
-final_filename = "all_data.csv"
-final_df.to_csv(final_filename, index=False)
+# final_filename = "all_data.csv"
+# final_df.to_csv(final_filename, index=False)
 
