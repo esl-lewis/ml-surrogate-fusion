@@ -71,18 +71,111 @@ def get_callbacks():
 
 # leaky_relu = LeakyReLU(alpha=0.01)
 
-pulses_ds = tf.data.experimental.make_csv_dataset(
+column_names = [
+    "BPME_0",
+    "BPME_10",
+    "BPME_11",
+    "BPME_12",
+    "BPME_13",
+    "BPME_14",
+    "BPME_15",
+    "BPME_16",
+    "BPME_17",
+    "BPME_18",
+    "BPME_2",
+    "BPME_3",
+    "BPME_4",
+    "BPME_5",
+    "BPME_6",
+    "BPME_7",
+    "BPME_8",
+    "BPME_9",
+    "BVAC",
+    "FLME_10",
+    "FLME_11",
+    "FLME_12",
+    "FLME_13",
+    "FLME_14",
+    "FLME_15",
+    "FLME_16",
+    "FLME_17",
+    "FLME_18",
+    "FLME_19",
+    "FLME_20",
+    "FLME_37",
+    "FLME_38",
+    "FLME_7",
+    "FLME_8",
+    "FLME_9",
+    "FLX",
+    "IPLA",
+    "Time",
+    "DFDP",
+    "FAXS",
+    "FBND",
+    "P",
+    "FBND-FAXS",
+]
+# column_defaults = []
+select_columns = [
+    "BPME_0",
+    "BPME_10",
+    "BPME_11",
+    "BPME_12",
+    "BPME_13",
+    "BPME_14",
+    "BPME_15",
+    "BPME_16",
+    "BPME_17",
+    "BPME_18",
+    "BPME_2",
+    "BPME_3",
+    "BPME_4",
+    "BPME_5",
+    "BPME_6",
+    "BPME_7",
+    "BPME_8",
+    "BPME_9",
+    "BVAC",
+    "FLME_10",
+    "FLME_11",
+    "FLME_12",
+    "FLME_13",
+    "FLME_14",
+    "FLME_15",
+    "FLME_16",
+    "FLME_17",
+    "FLME_18",
+    "FLME_19",
+    "FLME_20",
+    "FLME_37",
+    "FLME_38",
+    "FLME_7",
+    "FLME_8",
+    "FLME_9",
+    "FLX",
+    "IPLA",
+    "DFDP",
+    "P",
+    "FBND-FAXS",
+]
+# removes time, FAXS and FBND
+# column names here is label inclusive, ie not just feature names
+
+train_ds = tf.data.experimental.make_csv_dataset(
     file_pattern="../JET_EFIT_MAGNETIC/*_merged.csv",
     batch_size=10,
     num_epochs=1,
     num_parallel_reads=20,
-    shuffle_buffer_size=10000,
+    shuffle_buffer_size=1000,
     label_name="FBND-FAXS",
     header=True,
     shuffle=True,
+    # prefetch_buffer_size= should be steps per epoch, otherwise gets auto set
 )
+# train_ds = train_ds.shuffle(buffer_size=1000).batch(10)
 
-
+"""
 # load data
 # pulse_data = pd.read_csv("../JET_EFIT_magnetic/all_data.csv")
 pulse_data = pd.read_csv("../JET_EFIT_magnetic/interpolated_99070.csv")
@@ -98,11 +191,11 @@ X_train, X_test, y_train, y_test = train_test_split(
 X_train, X_val, y_train, y_val = train_test_split(
     X_train, y_train, test_size=0.2, random_state=24
 )
-
+"""
 N_VALIDATION = int(len(X_val))
 N_TRAIN = int(len(X_train))
 BUFFER_SIZE = N_TRAIN
-BATCH_SIZE = 50  # can crank this up
+BATCH_SIZE = 10  # can crank this up
 STEPS_PER_EPOCH = N_TRAIN // BATCH_SIZE
 
 lr_schedule = tf.keras.optimizers.schedules.InverseTimeDecay(
@@ -123,7 +216,7 @@ if wandb.run.resumed:
     model = load_model(wandb.restore("model-best.h5").name)
 else:
     normalizer = preprocessing.Normalization(axis=-1)
-    normalizer.adapt(np.array(X_train))
+    normalizer.adapt(np.array(train_ds))
 
     tiny_model = tf.keras.Sequential(
         [
@@ -147,13 +240,12 @@ else:
 print("MODEL COMPILED")
 
 tiny_model.fit(
-    X_train,
-    y_train,
+    train_ds,
     # steps_per_epoch=STEPS_PER_EPOCH,
     # batch_size=config.batch_size,
     epochs=config.epochs,
     initial_epoch=wandb.run.step,  # for resumed runs
-    validation_data=(X_val, y_val),
+    # validation_data=(X_val, y_val),
     callbacks=[WandbCallback(), get_callbacks()],
     verbose=0,
 )
