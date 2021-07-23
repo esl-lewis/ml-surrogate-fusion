@@ -30,11 +30,11 @@ wandb.login()
 # default hyperparameter values
 PROJECT_NAME = "surrogate-equilibrium"
 MODEL_NOTES = "default small network"
-BATCH_SIZE = 32
-DROPOUT = 0.6973
+BATCH_SIZE = 10
+DROPOUT = 0.25
 EPOCHS = 100
 L1_SIZE = 12
-L2_SIZE = 10
+L2_SIZE = 28
 HIDDEN_LAYER_SIZE = 128
 INITIAL_LEARNING_RATE = 0.001
 DECAY_RATE = 1
@@ -48,7 +48,7 @@ defaults = dict(
     initial_learn_rate=0.001,
     decay_rate=1,
     leaky_alpha=0.3,
-    epochs=27,
+    epochs=100,
     batch_size=10,
 )
 
@@ -167,6 +167,18 @@ def train_nn(defaults):
         verbose=1,
     )
     print("MODEL TRAINED")
+
+    y_pred = tiny_model.predict(X_test).flatten()
+
+    a = plt.axes(aspect="equal")
+    plt.scatter(y_test, y_pred)
+    plt.xlabel("True Values [FAXS]")
+    plt.ylabel("Predictions [FAXS]")
+    lims = [0, 2]
+    plt.xlim(lims)
+    plt.ylim(lims)
+    _ = plt.plot(lims, lims)
+    plt.show()
 
 
 if __name__ == "__main__":
