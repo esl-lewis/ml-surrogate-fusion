@@ -46,11 +46,11 @@ for sep_file in file_list:
         merged_df.to_csv(merged_name, index=False)
         print(merged_df.head(2))
 
-        # dataframe_list.append(merged_df)
+        dataframe_list.append(merged_df)
 
-# final_df = pd.concat(dataframe_list)
+final_df = pd.concat(dataframe_list)
 
 
-# final_filename = "all_data.csv"
-# final_df.to_csv(final_filename, index=False)
+final_filename = "all_data.csv"
+final_df.to_csv(final_filename, index=False)
 
