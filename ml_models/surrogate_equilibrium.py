@@ -40,6 +40,19 @@ INITIAL_LEARNING_RATE = 0.001
 DECAY_RATE = 1
 LEAKY_ALPHA = 0.3
 
+defaults = dict(
+    dropout=0.6973,
+    hidden_layer_size=128,
+    l1_size=12,
+    l2_size=10,
+    initial_learn_rate=0.001,
+    decay_rate=1,
+    leaky_alpha=0.3,
+    epochs=27,
+    batch_size=10,
+)
+
+
 """
 # "activation_1": leaky_relu, # note leaky relu needs to be its own layer
 "activation_1": "relu",
@@ -81,15 +94,19 @@ def get_callbacks():
     ]
 
 
-def train_nn(args):
+def train_nn(defaults):
     # initialize wandb logging
+    """
     wandb.init(project=args.project_name, notes=args.notes)
     wandb.config.update(args)
+    """
     # leaky_relu = LeakyReLU(alpha=0.01)
+    wandb.init(config=defaults)
+    config = wandb.config
 
     # load data
-    # pulse_data = pd.read_csv("../JET_EFIT_magnetic/all_data.csv")
-    pulse_data = pd.read_csv("../JET_EFIT_magnetic/interpolated_99070.csv")
+    pulse_data = pd.read_csv("../JET_EFIT_magnetic/all_data.csv")
+    # pulse_data = pd.read_csv("../JET_EFIT_magnetic/interpolated_99070.csv")
     pulse_data = pulse_data.dropna(axis=0)
 
     y = pulse_data["FBND"] - pulse_data["FAXS"]
@@ -122,11 +139,11 @@ def train_nn(args):
     tiny_model = tf.keras.Sequential(
         [
             normalizer,
-            layers.Dense(args.l1_size),
-            layers.LeakyReLU(alpha=args.leaky_alpha),
-            layers.Dropout(args.dropout),
-            layers.Dense(args.l2_size),
-            layers.LeakyReLU(alpha=args.leaky_alpha),
+            layers.Dense(config.l1_size),
+            layers.LeakyReLU(alpha=config.leaky_alpha),
+            layers.Dropout(config.dropout),
+            layers.Dense(config.l2_size),
+            layers.LeakyReLU(alpha=config.leaky_alpha),
             layers.Dense(1),
         ]
     )
@@ -143,16 +160,17 @@ def train_nn(args):
         X_train,
         y_train,
         # steps_per_epoch=STEPS_PER_EPOCH,
-        batch_size=args.batch_size,
-        epochs=args.epoch,
+        batch_size=config.batch_size,
+        epochs=config.epochs,
         validation_data=(X_val, y_val),
         callbacks=[WandbCallback(), get_callbacks()],
-        verbose=0,
+        verbose=1,
     )
     print("MODEL TRAINED")
 
 
 if __name__ == "__main__":
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "-m",
@@ -208,13 +226,16 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-
+    """
+    """
     # easier testing--don't log to wandb if dry run is set
     if args.dry_run:
         os.environ["WANDB_MODE"] = "dryrun"
         print("in dry run mode?")
 
     train_nn(args)
+    """
+    train_nn(defaults)
 
 
 """
