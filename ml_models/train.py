@@ -151,7 +151,7 @@ STEPS_PER_EPOCH = BUFFER_SIZE // BATCH_SIZE
 
 
 train_ds = tf.data.experimental.make_csv_dataset(
-    file_pattern="../JET_EFIT_MAGNETIC/train/*_merged.csv",
+    file_pattern="../JET_EFIT_magnetic/train/*_merged.csv",
     batch_size=config.batch_size,
     num_epochs=1,
     num_parallel_reads=20,
@@ -163,7 +163,7 @@ train_ds = tf.data.experimental.make_csv_dataset(
 )
 
 val_ds = tf.data.experimental.make_csv_dataset(
-    file_pattern="../JET_EFIT_MAGNETIC/val/*_merged.csv",
+    file_pattern="../JET_EFIT_magnetic/val/*_merged.csv",
     batch_size=config.batch_size,
     num_epochs=1,
     num_parallel_reads=20,
