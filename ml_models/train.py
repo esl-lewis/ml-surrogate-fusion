@@ -223,8 +223,8 @@ print("MODEL COMPILED")
 
 tiny_model.fit(
     train_ds,
-    # steps_per_epoch=STEPS_PER_EPOCH,
-    # batch_size=config.batch_size,
+    steps_per_epoch=STEPS_PER_EPOCH,
+    batch_size=config.batch_size,
     epochs=config.epochs,
     initial_epoch=wandb.run.step,  # for resumed runs
     validation_data=val_ds,
