@@ -239,14 +239,15 @@ class DATA:
         merged_df.to_csv(merged_name, index=False)
         print(merged_df.head(2))
 
+    def set_and_write(self, pulse_number):
+        self = self.set_pulse(pulse_number)
+        self.write_pulse(pulse_number)
+
 
 # Main function to run whole thing
 class Main:
     def __init__(self):
-        # pulse_num = 86320
         EFIT_params = ["FAXS", "FBND", "P", "DFDP"]  # BOTH
-        # TODO defining these twice is not ideal - work out another option
-        # use P, try predict R and Z
         MAGC_params = ["BPME", "FLME", "BVAC", "FLX", "IPLA"]
 
         magnetic_probes = [
@@ -297,8 +298,7 @@ class Main:
         # 98972 - 99072, for big range
         for pulse_num in range(99070, 99072):
             try:
-                data_thread = data_thread.set_pulse(pulse_num)
-                data_thread.write_pulse(pulse_num)
+                data_thread.set_and_write(pulse_num)
             except Exception as e:
                 print("Data for", pulse_num, "not found. Possibly dry run, skipping.")
                 print(e)
