@@ -1,11 +1,14 @@
-from numpy.core.arrayprint import DatetimeFormat
-
 # EFIT + magnetics
 
 try:
+    import multiprocessing as mp
+
+    from numpy.core.arrayprint import DatetimeFormat
+
     import sys, traceback
     import numpy as np
     import csv
+    import time
     import pandas as pd
 
     # import py_flush as Flush
@@ -29,19 +32,6 @@ except:
     traceback.print_exc(file=sys.stdout)
     sys.exit(127)
 
-# --- Global variables
-mu_0 = 4 * 3.1415926535 * 1e-7
-eV2Joules = 1.602176487 * 1e-19
-scale_height = 50
-
-# pulse_number = input("Pulse number:")
-# pulse_number = 82630
-
-# TODO add way to check for diagnostic failure, eg EFIT has failed time slices value EFL
-# TODO add flag to check for dry run?
-
-# TODO grabs MSTA correct probes
-# TODO interpolates times
 
 # --- Modules for JETPPF system
 sys.path[:0] = ["/jet/share/lib/python"]
@@ -203,13 +193,62 @@ class DATA:
 
         return self
 
+    def write_pulse(self, pulse_number):
+        EFIT_data = {}
+        MAGC_data = {}
+        # params_to_retrieve = EFIT_params + MAGC_params
+        for parameter in self.EFIT_params:
+            EFIT_data[parameter] = getattr(self, parameter)
+        EFIT_data["Time"] = DATA.EFIT_t
+
+        all_params = dir(self)
+
+        print("ALL PARAMS(?)", all_params)
+
+        only_probes = filter(
+            lambda param: (param.startswith("BPME_")) | (param.startswith("FLME_")),
+            all_params,
+        )
+        filtered_params = list(only_probes)
+
+        for parameter in self.MAGC_params:
+            if parameter.startswith("BPME") | parameter.startswith("FLME"):
+                continue
+            filtered_params.append(parameter)
+        print("filtered params:", filtered_params)
+
+        for parameter in filtered_params:
+            MAGC_data[parameter] = getattr(self, parameter)
+        MAGC_data["Time"] = DATA.MAGC_t
+
+        # for key, value in all_data.items():
+        #    print(key, len([item for item in value if item]))
+
+        df_EFIT = pd.DataFrame(EFIT_data)
+        # df_EFIT = df_EFIT.set_index("Time")
+        df_MAGC = pd.DataFrame(MAGC_data)
+
+        merged_df = df_MAGC.merge(df_EFIT, how="outer", on="Time")
+        merged_df = merged_df.dropna(axis=0)
+
+        merged_name = str(pulse_number) + ".csv"
+        merged_df["FBND-FAXS"] = merged_df["FBND"] - merged_df["FAXS"]
+        merged_df.to_csv(merged_name, index=False)
+        print(merged_df.head(2))
+
+    def set_and_write(self, pulse_number):
+        try:
+            self = self.set_pulse(pulse_number)
+            self.write_pulse(pulse_number)
+        except Exception as e:
+            print("Data for", pulse_number, "not found. Possibly dry run, skipping.")
+            print(e)
+
 
 # Main function to run whole thing
 class Main:
     def __init__(self):
-        # pulse_num = 86320
         EFIT_params = ["FAXS", "FBND", "P", "DFDP"]  # BOTH
-        # use P, try predict R and Z
         MAGC_params = ["BPME", "FLME", "BVAC", "FLX", "IPLA"]
 
         magnetic_probes = [
@@ -256,60 +295,17 @@ class Main:
         # pulse_num = input("Pulse number:")
         data_thread = DATA(EFIT_params, MAGC_params, flux_loops, magnetic_probes)
 
-        # Extract multiple pulses
-        # 98972 - 99072, for big range
-        for pulse_num in range(99070, 99072):
-            try:
-                data_thread = data_thread.set_pulse(pulse_num)
-            except Exception as e:
-                print("Data for", pulse_num, "not found. Possibly dry run, skipping.")
-                print(e)
-                continue
-            EFIT_data = {}
-            MAGC_data = {}
-            # params_to_retrieve = EFIT_params + MAGC_params
-            for parameter in EFIT_params:
-                EFIT_data[parameter] = getattr(data_thread, parameter)
-            EFIT_data["Time"] = DATA.EFIT_t
+        num_processors = mp.cpu_count()
 
-            all_params = dir(data_thread)
+        pool = mp.Pool(num_processors)
 
-            print("ALL PARAMS(?)", all_params)
+        pulse_numbers = list(range(99070, 99072))
+        # divide pulses between cores
 
-            only_probes = filter(
-                lambda param: (param.startswith("BPME_")) | (param.startswith("FLME_")),
-                all_params,
-            )
-            filtered_params = list(only_probes)
+        # divide pulses up
 
-            MAGC_params = ["BPME", "FLME", "BVAC", "FLX", "IPLA"]
-            for parameter in MAGC_params:
-                if parameter.startswith("BPME") | parameter.startswith("FLME"):
-                    continue
-                filtered_params.append(parameter)
-            print("filtered params:", filtered_params)
+        pool.map(data_thread.set_and_write, [pulse_num for pulse_num in pulse_numbers])
+        pool.close()
 
-            for parameter in filtered_params:
-                MAGC_data[parameter] = getattr(data_thread, parameter)
-            MAGC_data["Time"] = DATA.MAGC_t
-
-            # for key, value in all_data.items():
-            #    print(key, len([item for item in value if item]))
-
-            df_EFIT = pd.DataFrame(EFIT_data)
-            # df_EFIT = df_EFIT.set_index("Time")
-            filename = str(pulse_num) + "_EFIT.csv"
-            with open(filename, mode="w") as f:
-                df_EFIT.to_csv(f)
-
-            df_MAGC = pd.DataFrame(MAGC_data)
-            # df_MAGC = df_MAGC.set_index("Time")
-            filename = str(pulse_num) + "_MAGC.csv"
-            with open(filename, mode="w") as f:
-                df_MAGC.to_csv(f)
-
-
-#    gtk_thread = gtk_class(data_thread)
-#    gtk.main()
 
 Main()
