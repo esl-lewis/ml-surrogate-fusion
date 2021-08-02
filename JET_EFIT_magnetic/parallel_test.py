@@ -33,9 +33,6 @@ except:
     sys.exit(127)
 
 
-print("Number of processors: ", mp.cpu_count())
-
-
 # --- Modules for JETPPF system
 sys.path[:0] = ["/jet/share/lib/python"]
 from ppf import *
@@ -240,8 +237,12 @@ class DATA:
         print(merged_df.head(2))
 
     def set_and_write(self, pulse_number):
-        self = self.set_pulse(pulse_number)
-        self.write_pulse(pulse_number)
+        try:
+            self = self.set_pulse(pulse_number)
+            self.write_pulse(pulse_number)
+        except Exception as e:
+            print("Data for", pulse_number, "not found. Possibly dry run, skipping.")
+            print(e)
 
 
 # Main function to run whole thing
@@ -294,15 +295,28 @@ class Main:
         # pulse_num = input("Pulse number:")
         data_thread = DATA(EFIT_params, MAGC_params, flux_loops, magnetic_probes)
 
-        # Extract multiple pulses
-        # 98972 - 99072, for big range
-        for pulse_num in range(99070, 99072):
+        num_processors = mp.cpu_count()
+
+        pool = mp.Pool(num_processors)
+
+        pulse_numbers = list(range(99070, 99072))
+        # divide pulses between cores
+        # divided_pulses = []
+
+        # with mp.Pool(processes=num_processors) as pool:
+
+        # divide pulses up
+
+        pool.map(data_thread.set_and_write, [pulse_num for pulse_num in pulse_numbers])
+        pool.close()
+
+        """for pulse_num in range(99070, 99072):
             try:
                 data_thread.set_and_write(pulse_num)
             except Exception as e:
                 print("Data for", pulse_num, "not found. Possibly dry run, skipping.")
                 print(e)
-                continue
+                continue"""
 
 
 Main()
