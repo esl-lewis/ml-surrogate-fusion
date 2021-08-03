@@ -248,9 +248,12 @@ class DATA:
 # Main function to run whole thing
 class Main:
     def __init__(self):
-        EFIT_params = ["FAXS", "FBND", "P", "DFDP"]  # BOTH
+        EFIT_params = ["FAXS", "FBND", "ZXPM", "RXPM"]
+        # remove P and DFDP from EFIT params for now
+        # add in selection of R and Z points
+        # starting with ZXPM and RXPM but scale up to all of them
         MAGC_params = ["BPME", "FLME", "BVAC", "FLX", "IPLA"]
-
+        # potential to add in PFS and VL?
         magnetic_probes = [
             0,
             1,
