@@ -7,20 +7,21 @@ try:
     import csv
     import pandas as pd
 
-    #import py_flush as Flush
+    # import py_flush as Flush
     from scipy import optimize
 
     # from math import pi, sin, cos, sqrt, exp, atan2, tanh, cosh
-    #import gtk
+    # import gtk
     import matplotlib
     import matplotlib.pyplot as plt
-    #from matplotlib.widgets import Slider
-    #from matplotlib.backends.backend_gtkagg import FigureCanvasGTKAgg as FigureCanvas
-    #from matplotlib.figure import Figure
-    #from matplotlib.figure import Axes
-    #from matplotlib.backends.backend_gtkagg import (
+
+    # from matplotlib.widgets import Slider
+    # from matplotlib.backends.backend_gtkagg import FigureCanvasGTKAgg as FigureCanvas
+    # from matplotlib.figure import Figure
+    # from matplotlib.figure import Axes
+    # from matplotlib.backends.backend_gtkagg import (
     #    NavigationToolbar2GTK as NavigationToolbar,
-    #)
+    # )
     import os
 except:
     print("-------failed to import module!---------")
@@ -55,8 +56,8 @@ class DATA:
         DATA.STBP = np.array([])
         DATA.STFL = np.array([])
         DATA.psi_shift = 0.0
-        #DATA.MAGC_params = MAGC_parameters
-        #for param in MAGC_parameters:
+        # DATA.MAGC_params = MAGC_parameters
+        # for param in MAGC_parameters:
         #    setattr(DATA, param, np.array([]))
 
     # --- Load the pulse basic data # MACHINE DEPENDENT
@@ -70,7 +71,7 @@ class DATA:
 
         # --- Use MSTA to find which diagnostics are usable
         # STBP = magnetic probe status
-        
+
         dda = "MSTA"
         dtyp = "STBP"
         ihdat, iwdat, data, x, t, ier = ppfget(
@@ -81,8 +82,7 @@ class DATA:
                 "Failed to load {} data. May not exist for pulse.".format(dtyp)
             )
         DATA.STBP = data
-        #print(DATA.STBP)
-
+        # print(DATA.STBP)
 
         # STFL = flux probe status
         dda = "MSTA"
@@ -95,9 +95,8 @@ class DATA:
                 "Failed to load {} data. May not exist for pulse.".format(dtyp)
             )
         DATA.STFL = data
-        #print(DATA.STFL)
-        #print(type(DATA.STFL))
-
+        # print(DATA.STFL)
+        # print(type(DATA.STFL))
 
         return self
 
@@ -109,37 +108,43 @@ class Main:
         STBP_count = np.array([0])
         STFL_count = np.array([0])
         # Extract multiple pulses
+
+        valid_pulse_count = 0
+
         for pulse_num in range(98972, 99072):
-            print('PULSE NUMBER',pulse_num)
+            print("PULSE NUMBER", pulse_num)
             try:
                 data_thread = data_thread.set_pulse(pulse_num)
+                valid_pulse_count += 1
             except Exception as e:
                 print("Data for", pulse_num, "not found. Possibly dry run, skipping.")
                 print(e)
                 continue
             all_data = {}
 
-            for parameter in ['STBP','STFL']:
+            for parameter in ["STBP", "STFL"]:
                 all_data[parameter] = getattr(data_thread, parameter)
-            STBP_count = STBP_count + all_data['STBP']
-            STFL_count = STFL_count + all_data['STFL']
+            STBP_count = STBP_count + all_data["STBP"]
+            STFL_count = STFL_count + all_data["STFL"]
 
-            #for key, value in all_data.items():
+            # for key, value in all_data.items():
             #    print(key, len([item for item in value if item]))
+        print("TOTAL VALID PULSES:", valid_pulse_count)
+
         print(STBP_count)
         print(STFL_count)
-        plt.bar(np.arange(len(STBP_count)),STBP_count,width=0.8)
-        #plt.bar(np.arange(len(STFL_count)),STFL_count,width=0.8)
+        plt.bar(np.arange(len(STBP_count)), STBP_count, width=0.8)
+        # plt.bar(np.arange(len(STFL_count)),STFL_count,width=0.8)
         plt.show()
-            # TODO rank most robust diagnostics here
+        # TODO rank most robust diagnostics here
         print(type(STBP_count))
         STBP_count = np.array(STBP_count)
         print(type(STBP_count))
         # Need to upgrade numpy and python for below to work
-        indices_diagnostics = np.argpartition(STBP_count,-150)[-150:]
-        print('Best diagnostics indices:',indices_diagnostics)
-        print('Of which working runs:',STBP_count[indices_diagnostics])
-        # remember to add 1 to probe num to account for offset
+        indices_diagnostics = np.argpartition(STBP_count, -150)[-150:]
+        print("Best diagnostics indices:", indices_diagnostics)
+        print("Of which working runs:", STBP_count[indices_diagnostics])
+        # remember to add 1 to probe num to account for offset?
         """
         df = pd.DataFrame(all_data)
         df = df.set_index("Time")

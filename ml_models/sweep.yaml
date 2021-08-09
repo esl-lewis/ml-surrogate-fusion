@@ -1,4 +1,4 @@
-program: train.py
+program: surrogate_equilibrium.py
 method: bayes
 metric:
   goal: minimize

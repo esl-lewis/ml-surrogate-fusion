@@ -58,6 +58,12 @@ class CONFIG:
 config = CONFIG()
 
 
+def get_callbacks(name):
+    return [
+        tf.keras.callbacks.EarlyStopping(monitor="val_loss", patience=3),
+    ]
+
+
 def get_normalization_layer(name, dataset):
     # Create a Normalization layer for our feature.
     normalizer = preprocessing.Normalization()
@@ -94,10 +100,10 @@ def plot_loss(history):
     plt.show()
 
 
-pulse_data = pd.read_csv("../JET_EFIT_magnetic/sampled_data.csv")
+pulse_data = pd.read_csv("../JET_EFIT_magnetic/all_data.csv")
 pulse_data = pulse_data.dropna(axis=0)
 
-y = pulse_data["FAXS"]
+y = pulse_data["FBND"] - pulse_data["FAXS"]
 X = pulse_data.drop(["FAXS", "FBND", "Time"], axis=1)
 
 # print(X.head(3))
@@ -117,20 +123,96 @@ print(len(X_val), "validation examples")
 print(len(X_test), "test examples")
 
 
-model = tf.keras.models.Sequential(
+N_VALIDATION = int(len(X_val))
+N_TRAIN = int(len(X_train))
+BUFFER_SIZE = N_TRAIN
+BATCH_SIZE = 50  # can crank this up
+STEPS_PER_EPOCH = N_TRAIN // BATCH_SIZE
+
+
+lr_schedule = tf.keras.optimizers.schedules.InverseTimeDecay(
+    0.001, decay_steps=STEPS_PER_EPOCH * 1000, decay_rate=1, staircase=False
+)
+
+
+def get_optimizer():
+    return tf.keras.optimizers.Adam(lr_schedule)
+
+
+def compile_and_fit(model, name, optimizer=None, max_epochs=100):
+    if optimizer is None:
+        optimizer = get_optimizer()
+    model.compile(
+        optimizer=optimizer, loss="mean_absolute_error", metrics="mean_absolute_error"
+    )
+
+    model.summary()
+
+    history = model.fit(
+        X_train,
+        y_train,
+        steps_per_epoch=STEPS_PER_EPOCH,
+        epochs=max_epochs,
+        validation_data=(X_val, y_val),
+        callbacks=get_callbacks(name),
+        verbose=0,
+    )
+    return history
+
+
+normalizer = preprocessing.Normalization(axis=-1)
+normalizer.adapt(np.array(X_train))
+
+
+tiny_model = tf.keras.Sequential(
+    [normalizer, layers.Dense(16, activation="elu"), layers.Dense(1)]
+)
+size_histories = {}
+size_histories["Tiny"] = compile_and_fit(tiny_model, "sizes/Tiny")
+
+
+large_l2_dropout_model = tf.keras.Sequential(
     [
-        tf.keras.layers.Dense(40, input_dim=35),
-        tf.keras.layers.Dense(20, activation="relu"),
-        tf.keras.layers.Dense(10),
+        normalizer,
+        layers.Dense(512, kernel_regularizer=regularizers.l2(0.001), activation="elu"),
+        layers.Dense(512, kernel_regularizer=regularizers.l2(0.001), activation="elu"),
+        layers.Dense(512, activation="elu", kernel_regularizer=regularizers.l2(0.001)),
+        layers.Dense(512, kernel_regularizer=regularizers.l2(0.001), activation="elu"),
+        layers.Dropout(0.01),
+        layers.Dense(1),
     ]
 )
 
-print(model.summary())
 
-model.compile(
-    optimizer="adam", loss="mape", metrics="mape",
-)
+size_histories["l2_reg"] = compile_and_fit(large_l2_dropout_model, "sizes/large_l2")
 
+plotter.plot(size_histories)
+plt.ylim([0, 1.2])
+plt.xlim([1, 60])
+plt.legend(loc="upper right")
+
+
+plotter.plot(size_histories)
+a = plt.xscale("log")
+# plt.xlim([1, max(plt.xlim())])
+plt.xlim([1, 100])
+plt.legend(loc="upper left")
+plt.ylim([0.1, 1.2])
+plt.xlabel("Epochs [Log Scale]")
+
+y_pred = large_l2_dropout_model.predict(X_test).flatten()
+
+a = plt.axes(aspect="equal")
+plt.scatter(y_test, y_pred)
+plt.xlabel("True Values [FAXS]")
+plt.ylabel("Predictions [FAXS]")
+lims = [0, 1.5]
+plt.xlim(lims)
+plt.ylim(lims)
+_ = plt.plot(lims, lims)
+
+
+"""
 num_epochs = 100
 # Not worried about memory or local minima
 batchSize = len(X_train)
@@ -144,7 +226,6 @@ history = model.fit(
     epochs=num_epochs,
 )
 
-"""
 
 # Use tensorflow dataset object for batching
 # train_dataset = tf.data.Dataset.from_tensor_slices((dict(X_train), y_train))

@@ -6,11 +6,7 @@ import matplotlib.pyplot as plt
 from tensorflow.python.keras.layers.normalization_v2 import BatchNormalization
 import wandb
 import sys
-import time
 
-# from matplotlib import cm
-
-# TODO sort big batching
 # TODO sort GPU use for scaling
 # TODO how to optimise hyperparameters? DARTS?
 
@@ -191,7 +187,6 @@ def get_optimizer():
     return tf.keras.optimizers.Adam(lr_schedule)
 
 
-# """
 # some research indicates using both batch normalisation and dropout/regularisation at the same time is counterproductive
 
 if wandb.run.resumed:
