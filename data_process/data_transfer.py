@@ -4,6 +4,16 @@
 import os, csv
 import tarfile
 import re
+from paramiko import SSHClient
+from scp import SCPClient
+import sys
+
+# Define progress callback that prints the current percentage completed for the file
+def progress(filename, size, sent):
+    sys.stdout.write(
+        "%s's progress: %.2f%%   \r" % (filename, float(sent) / float(size) * 100)
+    )
+
 
 """
 from paramiko import SSHClient
@@ -34,6 +44,8 @@ for folder, subfolder, files in os.walk(dir_path):
 
 print(file_list)
 
+# TODO make gzip file naming more specific
+
 # open for gzip compressed writing
 with tarfile.open("pulses.tar.gzip", "w:gz") as tar:
     for name in file_list:
@@ -43,16 +55,17 @@ print("TAR FILE CREATED")
 
 
 # TODO potentially automate scp transfer here
-"""
+
 ssh = SSHClient()
 ssh.load_system_host_keys()
-ssh.connect('MARCONI_SERVER')
+ssh.connect("login.marconi.cineca.it")
 
-scp = SCPClient(ssh.get_transport())
-scp.put('file_path_on_local_machine', 'file_path_on_remote_machine')
+scp = SCPClient(ssh.get_transport(), progress=progress)
+scp.put(
+    "/common/scratch/elewis/pulses.tar.gzip",
+    "/marconi_work/FUA35_WPJET1/elewis/pulses.tar.gzip",
+)
 scp.close()
-# see https://github.com/jbardin/scp.py 
-"""
 
 
 while True:
