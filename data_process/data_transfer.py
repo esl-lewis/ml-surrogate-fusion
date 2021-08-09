@@ -4,6 +4,7 @@
 import os, csv
 import tarfile
 import re
+
 from paramiko import SSHClient
 from scp import SCPClient
 import sys
@@ -15,21 +16,10 @@ def progress(filename, size, sent):
     )
 
 
-"""
-from paramiko import SSHClient
-from scp import SCPClient
-"""
+# writes tar file to directory it was called from (not necessarily the script location)
+# ideally place in same dir as csvs, bc gathers csvs from directory it is placed in
 
-# directory of csvs
-input_dir = "../JET_EFIT_magnetic/"
-
-# place to put gzip output
-# output_dir = "./output_dir"
-
-# writes tar file from working directory (not necessarily the script location)
-# ideally place in same dir as csvs?
-
-dir_path = os.path.dirname(os.path.realpath(input_dir))
+dir_path = os.path.dirname(os.path.realpath(__file__))
 
 file_list = []
 regexp = re.compile(r"[0-9]+[.]csv")
