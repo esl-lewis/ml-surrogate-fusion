@@ -3,7 +3,9 @@ import pandas as pd
 import tensorflow as tf
 from tensorflow import keras
 import matplotlib.pyplot as plt
-from tensorflow.python.keras.layers.normalization_v2 import BatchNormalization
+
+# from tensorflow.python.keras.layers.normalization_v2 import BatchNormalization
+
 import wandb
 import sys
 
@@ -30,6 +32,7 @@ defaults = dict(
     leaky_alpha=0.3,
     epochs=30,
     batch_size=10,
+    buffer_size=1000,
 )
 
 resume = sys.argv[-1] == "--resume"
@@ -141,13 +144,13 @@ select_columns = [
 # column names here is label inclusive, ie not just feature names
 
 FEATURES = 39
-BATCH_SIZE = 10  # can crank this up
-BUFFER_SIZE = 1000
+BATCH_SIZE = config.batch_size  # can crank this up
+BUFFER_SIZE = config.buffer_size
 STEPS_PER_EPOCH = BUFFER_SIZE // BATCH_SIZE
 
 
 train_ds = tf.data.experimental.make_csv_dataset(
-    file_pattern="../JET_EFIT_magnetic/train/*_merged.csv",
+    file_pattern="../../train/*.csv",
     batch_size=config.batch_size,
     num_epochs=1,
     num_parallel_reads=20,
@@ -159,7 +162,7 @@ train_ds = tf.data.experimental.make_csv_dataset(
 )
 
 val_ds = tf.data.experimental.make_csv_dataset(
-    file_pattern="../JET_EFIT_magnetic/val/*_merged.csv",
+    file_pattern="../../val/*.csv",
     batch_size=config.batch_size,
     num_epochs=1,
     num_parallel_reads=20,
@@ -188,6 +191,7 @@ def get_optimizer():
 
 
 # some research indicates using both batch normalisation and dropout/regularisation at the same time is counterproductive
+# some argument here: https://stackoverflow.com/questions/34716454/where-do-i-call-the-batchnormalization-function-in-keras about whether BN should be before or after the activation fnc
 
 if wandb.run.resumed:
     print("RESUMING")
@@ -210,7 +214,9 @@ else:
     optimizer = get_optimizer()
 
     tiny_model.compile(
-        optimizer=optimizer, loss="mean_absolute_error", metrics="mean_absolute_error"
+        optimizer=optimizer,
+        loss="mean_absolute_error",
+        metrics="mean_absolute_percentage_error",
     )
     print(tiny_model.summary())
 
